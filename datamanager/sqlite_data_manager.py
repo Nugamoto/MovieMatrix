@@ -41,3 +41,13 @@ class SQLiteDataManager(DataManagerInterface):
             session.commit()
             session.refresh(user)
             return user
+
+    def delete_user(self, user_id: int):
+        """Delete a user by ID."""
+        with self.Session() as session:
+            user = session.query(User).get(user_id)
+            if not user:
+                return False
+            session.delete(user)
+            session.commit()
+            return True
