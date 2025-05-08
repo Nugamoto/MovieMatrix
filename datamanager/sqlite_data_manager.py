@@ -30,3 +30,14 @@ class SQLiteDataManager(DataManagerInterface):
             session.commit()
             session.refresh(user)
             return user
+
+    def update_user(self, user_id: int, new_name: str):
+        """Update the name of a user by their ID."""
+        with self.Session() as session:
+            user = session.query(User).get(user_id)
+            if not user:
+                return None
+            user.name = new_name
+            session.commit()
+            session.refresh(user)
+            return user
