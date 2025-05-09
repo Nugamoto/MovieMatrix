@@ -131,5 +131,21 @@ def update_movie(user_id, movie_id):
     return render_template("update_movie.html", user=user, movie=movie)
 
 
+@app.route('/users/<int:user_id>/delete_movie/<int:movie_id>', methods=["POST"])
+def delete_movie(user_id, movie_id):
+    user = get_user_by_id(data_manager.get_all_users(), user_id)
+    if not user:
+        flash(f"User with ID {user_id} not found.")
+        return redirect(url_for("list_users"))
+
+    success = data_manager.delete_movie(movie_id)
+    if success:
+        flash(f"Movie was deleted successfully.")
+    else:
+        flash(f"Movie with ID {movie_id} not found or could not be deleted.")
+
+    return redirect(url_for("user_movies", user_id=user_id))
+
+
 if __name__ == "__main__":
     app.run(debug=True)
