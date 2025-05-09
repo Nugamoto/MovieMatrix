@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.name }}'s Reviews - MovieMatrix{% endblock %}
+
+{% block content %}
+<h1>Reviews by {{ user.name }}</h1>
+
+{% if reviews %}
+<table class="table table-striped mt-4">
+    <thead>
+    <tr>
+        <th>Movie</th>
+        <th>Review</th>
+        <th>Rating</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for review in reviews %}
+    <tr>
+        <td>{{ review.movie.title }}</td>
+        <td>{{ review.text }}</td>
+        <td>{{ review.user_rating }}</td>
+        <td>
+            <a href="{{ url_for('edit_review', user_id=user.id, review_id=review.id) }}"
+               class="btn btn-sm btn-outline-secondary">Edit</a>
+            <form method="POST" class="delete-review-form d-inline"
+                  action="{{ url_for('delete_review', user_id=user.id, review_id=review.id) }}">
+                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+            </form>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="mt-3">This user has not written any reviews yet.</p>
+{% endif %}
+{% endblock %}

@@ -164,6 +164,17 @@ def delete_movie(user_id, movie_id):
     return redirect(url_for("user_movies", user_id=user_id))
 
 
+@app.route("/users/<int:user_id>/reviews")
+def user_reviews(user_id):
+    user = get_user_by_id(data_manager.get_all_users(), user_id)
+    if not user:
+        flash(f"User with ID {user_id} not found.")
+        return redirect(url_for("list_users"))
+
+    reviews = data_manager.get_reviews_by_user(user_id)
+    return render_template("user_reviews.html", user=user, reviews=reviews)
+
+
 @app.route("/users/<int:user_id>/add_review/<int:movie_id>", methods=["GET", "POST"])
 def add_review(user_id, movie_id):
     user = get_user_by_id(data_manager.get_all_users(), user_id)
