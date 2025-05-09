@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}{{ user.name }}'s Movies - MovieMatrix{% endblock %}
+
+{% block content %}
+<h1>{{ user.name }}'s Favorite Movies</h1>
+
+{% if movies %}
+<table class="table table-striped mt-4">
+    <thead>
+    <tr>
+        <th>Title</th>
+        <th>Director</th>
+        <th>Year</th>
+        <th>Rating</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for movie in movies %}
+    <tr>
+        <td>{{ movie.title }}</td>
+        <td>{{ movie.director }}</td>
+        <td>{{ movie.year }}</td>
+        <td>{{ movie.rating }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="mt-3">This user has not added any movies yet.</p>
+{% endif %}
+{% endblock %}

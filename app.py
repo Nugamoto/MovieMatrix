@@ -5,7 +5,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from datamanager.sqlite_data_manager import SQLiteDataManager
-from helpers import is_valid_username
+from helpers import is_valid_username, get_user_by_id
 
 load_dotenv()
 
@@ -47,6 +47,19 @@ def add_user():
         return redirect(url_for("list_users"))
 
     return render_template("add_user.html")
+
+
+@app.route('/users/<int:user_id>')
+def user_movies(user_id):
+    users = data_manager.get_all_users()
+    user = get_user_by_id(users, user_id)
+
+    if user is None:
+        flash(f"User with ID {user_id} not found.")
+        return redirect(url_for("list_users"))
+
+    movies = data_manager.get_user_movies(user_id)
+    return render_template("user_movies.html", user=user, movies=movies)
 
 
 if __name__ == "__main__":
