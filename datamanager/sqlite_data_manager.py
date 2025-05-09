@@ -1,5 +1,5 @@
 from sqlalchemy import create_engine, select
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, joinedload
 
 from datamanager.data_manager_interface import DataManagerInterface
 from datamanager.models import User, Movie, Review
@@ -211,9 +211,8 @@ class SQLiteDataManager(DataManagerInterface):
             list[Review]: All reviews by the user.
         """
         with self.Session() as session:
-            result = session.execute(
-                select(Review).where(Review.user_id == user_id)
-            )
+            stmt = select(Review).options(joinedload(Review.movie)).where(Review.user_id == user_id)
+            result = session.execute(stmt)
             return result.scalars().all()
 
     def update_review(self, review_id: int, updated_data: dict):
