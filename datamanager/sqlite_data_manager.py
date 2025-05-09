@@ -187,18 +187,17 @@ class SQLiteDataManager(DataManagerInterface):
             return review
 
     def get_reviews_for_movie(self, movie_id: int):
-        """Return all reviews for a given movie.
+        """Return all reviews for a given movie, including user data.
 
         Args:
             movie_id (int): The movie's ID.
 
         Returns:
-            list[Review]: All reviews for the movie.
+            list[Review]: All reviews for the movie with user data preloaded.
         """
         with self.Session() as session:
-            result = session.execute(
-                select(Review).where(Review.movie_id == movie_id)
-            )
+            stmt = select(Review).options(joinedload(Review.user)).where(Review.movie_id == movie_id)
+            result = session.execute(stmt)
             return result.scalars().all()
 
     def get_reviews_by_user(self, user_id: int):
