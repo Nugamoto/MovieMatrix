@@ -5,8 +5,11 @@
 {% block content %}
 <h1>Reviews for "{{ movie.title }}"</h1>
 
-<a href="{{ url_for('add_review', user_id=user_id, movie_id=movie.id) }}"
-   class="btn btn-success mb-3">Add Review</a>
+<div class="d-flex justify-content-end mb-3">
+    <a href="{{ url_for('add_review', user_id=user_id, movie_id=movie.id) }}" class="btn btn-success">
+        Add Review
+    </a>
+</div>
 
 {% if reviews %}
 <table class="table table-striped">
