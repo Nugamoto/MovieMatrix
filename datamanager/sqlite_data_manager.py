@@ -144,3 +144,13 @@ class SQLiteDataManager(DataManagerInterface):
             session.commit()
             session.refresh(review)
             return review
+
+    def delete_review(self, review_id: int):
+        """Delete a review from the database."""
+        with self.Session() as session:
+            review = session.query(Review).get(review_id)
+            if not review:
+                return False
+            session.delete(review)
+            session.commit()
+            return True
