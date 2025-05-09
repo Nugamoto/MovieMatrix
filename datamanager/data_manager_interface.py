@@ -25,6 +25,11 @@ class DataManagerInterface(ABC):
 
     # === MOVIE ===
     @abstractmethod
+    def get_all_movies(self):
+        """Return a list of all movies."""
+        pass
+
+    @abstractmethod
     def get_user_movies(self, user_id: int):
         """Return a list of movies for the given user."""
         pass

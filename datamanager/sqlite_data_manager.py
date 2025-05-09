@@ -20,6 +20,20 @@ class SQLiteDataManager(DataManagerInterface):
             result = session.execute(select(User))
             return result.scalars().all()
 
+    def get_all_movies(self):
+        """Return all movies stored in the database.
+
+        This method retrieves all movie records available across all users.
+        It is used when movie data must be accessed independently of the user
+        (e.g., for public listings or cross-user aggregations).
+
+        Returns:
+            list[Movie]: A list of all Movie objects stored in the database.
+        """
+        with self.Session() as session:
+            result = session.execute(select(Movie))
+            return result.scalars().all()
+
     def get_user_movies(self, user_id: int):
         """Return all movies that belong to a specific user.
 
