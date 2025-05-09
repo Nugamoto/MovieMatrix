@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from clients.omdb_client import fetch_movie
 from datamanager.sqlite_data_manager import SQLiteDataManager
-from helpers import is_valid_username, get_user_by_id, is_valid_year, is_valid_rating, normalize_rating
+from helpers import is_valid_username, get_user_by_id, get_movie_by_id, is_valid_year, is_valid_rating, normalize_rating
 
 load_dotenv()
 
@@ -114,7 +114,7 @@ def update_movie(user_id, movie_id):
         return redirect(url_for("list_users"))
 
     movies = data_manager.get_user_movies(user_id)
-    movie = next((movie for movie in movies if movie.id == movie_id), None)
+    movie = get_movie_by_id(movies, movie_id)
     if not movie:
         flash(f"Movie with ID {movie_id} not found.")
         return redirect(url_for("user_movies", user_id=user_id))
@@ -170,7 +170,8 @@ def add_review(user_id, movie_id):
         flash(f"User with ID {user_id} not found.")
         return redirect(url_for("list_users"))
 
-    movie = next((movie for movie in data_manager.get_user_movies(user_id) if movie.id == movie_id), None)
+    movies = data_manager.get_user_movies(user_id)
+    movie = get_movie_by_id(movies, movie_id)
     if not movie:
         flash(f"Movie with ID {movie_id} not found.")
         return redirect(url_for("user_movies", user_id=user_id))

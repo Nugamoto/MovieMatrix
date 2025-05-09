@@ -13,6 +13,10 @@ def get_user_by_id(users: list, user_id: int):
     return next((user for user in users if user.id == user_id), None)
 
 
+def get_movie_by_id(movies, movie_id: int):
+    return next((movie for movie in movies if movie.id == movie_id), None)
+
+
 def is_valid_year(year: str) -> bool:
     if not year.isdigit():
         return False
