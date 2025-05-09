@@ -244,5 +244,15 @@ def edit_review(user_id, review_id):
     return render_template("edit_review.html", user=user, movie=movie, review=review)
 
 
+@app.route("/users/<int:user_id>/delete_review/<int:review_id>", methods=["POST"])
+def delete_review(user_id, review_id):
+    success = data_manager.delete_review(review_id)
+    if success:
+        flash("Review deleted successfully.")
+    else:
+        flash("Review could not be deleted.")
+    return redirect(url_for("user_reviews", user_id=user_id))
+
+
 if __name__ == "__main__":
     app.run(debug=True)
