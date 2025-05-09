@@ -5,6 +5,9 @@
 {% block content %}
 <h1>{{ user.name }}'s Favorite Movies</h1>
 
+<div class="d-flex justify-content-end mb-2">
+    <a href="{{ url_for('list_users') }}" class="btn btn-outline-secondary">Back to Users</a>
+</div>
 <div class="d-flex justify-content-end mb-3">
     <a href="{{ url_for('add_movie', user_id=user.id) }}" class="btn btn-success">Add Movie</a>
 </div>
