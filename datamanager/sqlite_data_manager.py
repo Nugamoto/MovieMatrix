@@ -51,3 +51,23 @@ class SQLiteDataManager(DataManagerInterface):
             session.delete(user)
             session.commit()
             return True
+
+    def add_movie(self, user_id: int, movie_data: dict):
+        """Add a movie to a user's movie list."""
+        with self.Session() as session:
+            user = session.query(User).get(user_id)
+            if not user:
+                return None
+
+            movie = Movie(
+                title=movie_data.get("title"),
+                director=movie_data.get("director"),
+                year=movie_data.get("year"),
+                rating=movie_data.get("rating"),
+                user_id=user_id
+            )
+
+            session.add(movie)
+            session.commit()
+            session.refresh(movie)
+            return movie
