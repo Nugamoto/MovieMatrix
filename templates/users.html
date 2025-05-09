@@ -21,7 +21,7 @@
             <a href="{{ url_for('user_movies', user_id=user.id) }}"
                class="btn btn-sm btn-outline-primary">Movies</a>
             <a href="{{ url_for('user_reviews', user_id=user.id) }}"
-               class="btn btn-sm btn-outline-secondary">Reviews</a>
+               class="btn btn-sm btn-outline-success">Reviews</a>
             <form method="POST" class="delete-user-form d-inline"
                   action="{{ url_for('delete_user', user_id=user.id) }}">
                 <button type="submit" class="btn btn-sm btn-outline-danger">Delete User</button>
