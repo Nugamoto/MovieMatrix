@@ -118,3 +118,9 @@ class SQLiteDataManager(DataManagerInterface):
             session.commit()
             session.refresh(review)
             return review
+
+    def get_reviews_for_movie(self, movie_id: int):
+        """Return all reviews for a given movie."""
+        with self.Session() as session:
+            reviews = session.query(Review).filter(Review.movie_id == movie_id).all()
+            return reviews
