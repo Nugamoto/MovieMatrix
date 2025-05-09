@@ -130,3 +130,17 @@ class SQLiteDataManager(DataManagerInterface):
         with self.Session() as session:
             reviews = session.query(Review).filter(Review.user_id == user_id).all()
             return reviews
+
+    def update_review(self, review_id: int, updated_data: dict):
+        """Update the content or rating of a review."""
+        with self.Session() as session:
+            review = session.query(Review).get(review_id)
+            if not review:
+                return None
+
+            review.text = updated_data.get("text", review.text)
+            review.user_rating = updated_data.get("user_rating", review.user_rating)
+
+            session.commit()
+            session.refresh(review)
+            return review
