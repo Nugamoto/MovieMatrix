@@ -13,6 +13,7 @@
         <th>Director</th>
         <th>Year</th>
         <th>Rating</th>
+        <th>Actions</th>
     </tr>
     </thead>
     <tbody>
@@ -22,6 +23,11 @@
         <td>{{ movie.director }}</td>
         <td>{{ movie.year }}</td>
         <td>{{ movie.rating }}</td>
+        <td>
+            <a href="{{ url_for('update_movie', user_id=user.id, movie_id=movie.id) }}"
+               class="btn btn-sm btn-outline-secondary">Edit</a>
+            <!-- Delete-Button kommt später -->
+        </td>
     </tr>
     {% endfor %}
     </tbody>
