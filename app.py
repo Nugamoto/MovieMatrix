@@ -50,6 +50,22 @@ def add_user():
     return render_template("add_user.html")
 
 
+@app.route("/delete_user/<int:user_id>", methods=["POST"])
+def delete_user(user_id):
+    user = get_user_by_id(data_manager.get_all_users(), user_id)
+    if not user:
+        flash(f"User with ID {user_id} not found.")
+        return redirect(url_for("list_users"))
+
+    success = data_manager.delete_user(user_id)
+    if success:
+        flash(f"User '{user.name}' and all associated data were deleted.")
+    else:
+        flash(f"User could not be deleted.")
+
+    return redirect(url_for("list_users"))
+
+
 @app.route('/users/<int:user_id>')
 def user_movies(user_id):
     users = data_manager.get_all_users()
