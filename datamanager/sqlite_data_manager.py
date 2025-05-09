@@ -87,3 +87,13 @@ class SQLiteDataManager(DataManagerInterface):
             session.commit()
             session.refresh(movie)
             return movie
+
+    def delete_movie(self, movie_id: int):
+        """Delete a movie by its ID."""
+        with self.Session() as session:
+            movie = session.query(Movie).get(movie_id)
+            if not movie:
+                return False
+            session.delete(movie)
+            session.commit()
+            return True
