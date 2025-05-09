@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Reviews for {{ movie.title }} - MovieMatrix{% endblock %}
+
+{% block content %}
+<h1>Reviews for "{{ movie.title }}"</h1>
+
+{% if reviews %}
+<table class="table table-striped mt-4">
+    <thead>
+    <tr>
+        <th>User</th>
+        <th>Review</th>
+        <th>Rating</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for review in reviews %}
+    <tr>
+        <td>{{ review.user.name }}</td>
+        <td>{{ review.text }}</td>
+        <td>{{ review.user_rating }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p class="mt-3">There are no reviews for this movie yet.</p>
+{% endif %}
+{% endblock %}

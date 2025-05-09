@@ -175,6 +175,18 @@ def user_reviews(user_id):
     return render_template("user_reviews.html", user=user, reviews=reviews)
 
 
+@app.route("/movies/<int:movie_id>/reviews")
+def movie_reviews(movie_id):
+    movies = data_manager.get_user_movies(movie_id)
+    movie = get_movie_by_id(movies, movie_id)
+    if not movie:
+        flash(f"Movie with ID {movie_id} not found.")
+        return redirect(url_for("list_users"))
+
+    reviews = data_manager.get_reviews_for_movie(movie_id)
+    return render_template("movie_reviews.html", movie=movie, reviews=reviews)
+
+
 @app.route("/users/<int:user_id>/add_review/<int:movie_id>", methods=["GET", "POST"])
 def add_review(user_id, movie_id):
     user = get_user_by_id(data_manager.get_all_users(), user_id)
@@ -203,7 +215,7 @@ def add_review(user_id, movie_id):
 
         data_manager.add_review(user_id, movie_id, review_data)
         flash(f"Review added for '{movie.title}'.")
-        return redirect(url_for("user_movies", user_id=user_id))
+        return redirect(url_for("user_reviews", user_id=user_id))
 
     return render_template("add_review.html", user=user, movie=movie)
 
@@ -219,7 +231,7 @@ def edit_review(user_id, review_id):
     review = get_review_by_id(reviews, review_id)
     if not review:
         flash(f"Review with ID {review_id} not found.")
-        return redirect(url_for("user_movies", user_id=user_id))
+        return redirect(url_for("user_reviews", user_id=user_id))
 
     movies = data_manager.get_user_movies(user_id)
     movie = get_movie_by_id(movies, review.movie_id)
@@ -239,7 +251,7 @@ def edit_review(user_id, review_id):
 
         data_manager.update_review(review_id, updated_data)
         flash(f"Review for '{movie.title}' updated.")
-        return redirect(url_for("user_movies", user_id=user_id))
+        return redirect(url_for("user_reviews", user_id=user_id))
 
     return render_template("edit_review.html", user=user, movie=movie, review=review)
 
