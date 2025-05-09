@@ -6,7 +6,8 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from clients.omdb_client import fetch_movie
 from datamanager.sqlite_data_manager import SQLiteDataManager
-from helpers import is_valid_username, get_user_by_id, get_movie_by_id, is_valid_year, is_valid_rating, normalize_rating
+from helpers import is_valid_username, get_user_by_id, get_movie_by_id, get_review_by_id, is_valid_year, \
+    is_valid_rating, normalize_rating
 
 load_dotenv()
 
@@ -204,7 +205,7 @@ def edit_review(user_id, review_id):
         return redirect(url_for("list_users"))
 
     reviews = data_manager.get_reviews_by_user(user_id)
-    review = next((r for r in reviews if r.id == review_id), None)
+    review = get_review_by_id(reviews, review_id)
     if not review:
         flash(f"Review with ID {review_id} not found.")
         return redirect(url_for("user_movies", user_id=user_id))

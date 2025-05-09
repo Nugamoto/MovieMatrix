@@ -17,6 +17,10 @@ def get_movie_by_id(movies, movie_id: int):
     return next((movie for movie in movies if movie.id == movie_id), None)
 
 
+def get_review_by_id(reviews, review_id: int):
+    return next((review for review in reviews if review.id == review_id), None)
+
+
 def is_valid_year(year: str) -> bool:
     if not year.isdigit():
         return False
