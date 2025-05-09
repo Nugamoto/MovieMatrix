@@ -163,5 +163,37 @@ def delete_movie(user_id, movie_id):
     return redirect(url_for("user_movies", user_id=user_id))
 
 
+@app.route("/users/<int:user_id>/add_review/<int:movie_id>", methods=["GET", "POST"])
+def add_review(user_id, movie_id):
+    user = get_user_by_id(data_manager.get_all_users(), user_id)
+    if not user:
+        flash(f"User with ID {user_id} not found.")
+        return redirect(url_for("list_users"))
+
+    movie = next((movie for movie in data_manager.get_user_movies(user_id) if movie.id == movie_id), None)
+    if not movie:
+        flash(f"Movie with ID {movie_id} not found.")
+        return redirect(url_for("user_movies", user_id=user_id))
+
+    if request.method == "POST":
+        text = request.form.get("text", "").strip()
+        user_rating = request.form.get("user_rating", "").strip()
+
+        if not is_valid_rating(user_rating):
+            flash("Invalid rating. Please enter a number between 0.0 and 10.0.")
+            return redirect(request.url)
+
+        review_data = {
+            "text": text,
+            "user_rating": normalize_rating(user_rating)
+        }
+
+        data_manager.add_review(user_id, movie_id, review_data)
+        flash(f"Review added for '{movie.title}'.")
+        return redirect(url_for("user_movies", user_id=user_id))
+
+    return render_template("add_review.html", user=user, movie=movie)
+
+
 if __name__ == "__main__":
     app.run(debug=True)
