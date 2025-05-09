@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
 from data_manager_interface import DataManagerInterface
@@ -17,8 +17,8 @@ class SQLiteDataManager(DataManagerInterface):
             list[User]: A list of all users.
         """
         with self.Session() as session:
-            all_users = session.query(User).all()
-            return all_users
+            result = session.execute(select(User))
+            return result.scalars().all()
 
     def get_user_movies(self, user_id: int):
         """Return all movies that belong to a specific user.
@@ -30,8 +30,10 @@ class SQLiteDataManager(DataManagerInterface):
             list[Movie]: List of movies owned by the user.
         """
         with self.Session() as session:
-            movies = session.query(Movie).filter(Movie.user_id == user_id).all()
-            return movies
+            result = session.execute(
+                select(Movie).where(Movie.user_id == user_id)
+            )
+            return result.scalars().all()
 
     def add_user(self, name: str):
         """Add a new user to the database.
@@ -194,8 +196,10 @@ class SQLiteDataManager(DataManagerInterface):
             list[Review]: All reviews for the movie.
         """
         with self.Session() as session:
-            reviews = session.query(Review).filter(Review.movie_id == movie_id).all()
-            return reviews
+            result = session.execute(
+                select(Review).where(Review.movie_id == movie_id)
+            )
+            return result.scalars().all()
 
     def get_reviews_by_user(self, user_id: int):
         """Return all reviews written by a given user.
@@ -207,8 +211,10 @@ class SQLiteDataManager(DataManagerInterface):
             list[Review]: All reviews by the user.
         """
         with self.Session() as session:
-            reviews = session.query(Review).filter(Review.user_id == user_id).all()
-            return reviews
+            result = session.execute(
+                select(Review).where(Review.user_id == user_id)
+            )
+            return result.scalars().all()
 
     def update_review(self, review_id: int, updated_data: dict):
         """Update the content or rating of a review.
