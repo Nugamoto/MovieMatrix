@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker
 
-from data_manager_interface import DataManagerInterface
+from datamanager.data_manager_interface import DataManagerInterface
 from datamanager.models import User, Movie, Review
 
 
