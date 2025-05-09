@@ -196,5 +196,41 @@ def add_review(user_id, movie_id):
     return render_template("add_review.html", user=user, movie=movie)
 
 
+@app.route("/users/<int:user_id>/edit_review/<int:review_id>", methods=["GET", "POST"])
+def edit_review(user_id, review_id):
+    user = get_user_by_id(data_manager.get_all_users(), user_id)
+    if not user:
+        flash(f"User with ID {user_id} not found.")
+        return redirect(url_for("list_users"))
+
+    reviews = data_manager.get_reviews_by_user(user_id)
+    review = next((r for r in reviews if r.id == review_id), None)
+    if not review:
+        flash(f"Review with ID {review_id} not found.")
+        return redirect(url_for("user_movies", user_id=user_id))
+
+    movies = data_manager.get_user_movies(user_id)
+    movie = get_movie_by_id(movies, review.movie_id)
+
+    if request.method == "POST":
+        text = request.form.get("text", "").strip()
+        user_rating = request.form.get("user_rating", "").strip()
+
+        if not is_valid_rating(user_rating):
+            flash("Invalid rating. Please enter a number between 0.0 and 10.0.")
+            return redirect(request.url)
+
+        updated_data = {
+            "text": text,
+            "user_rating": normalize_rating(user_rating)
+        }
+
+        data_manager.update_review(review_id, updated_data)
+        flash(f"Review for '{movie.title}' updated.")
+        return redirect(url_for("user_movies", user_id=user_id))
+
+    return render_template("edit_review.html", user=user, movie=movie, review=review)
+
+
 if __name__ == "__main__":
     app.run(debug=True)
