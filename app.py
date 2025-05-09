@@ -6,7 +6,7 @@ from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
 from clients.omdb_client import fetch_movie
 from datamanager.sqlite_data_manager import SQLiteDataManager
-from helpers import is_valid_username, get_user_by_id
+from helpers import is_valid_username, get_user_by_id, is_valid_year, is_valid_rating, normalize_rating
 
 load_dotenv()
 
@@ -104,16 +104,29 @@ def update_movie(user_id, movie_id):
         return redirect(url_for("user_movies", user_id=user_id))
 
     if request.method == "POST":
+        title = request.form.get("title", "").strip()
+        director = request.form.get("director", "").strip()
+        year = request.form.get("year", "").strip()
+        rating = request.form.get("rating", "").strip()
+
+        if year and not is_valid_year(year):
+            flash(f"'{year}' is not a valid year.")
+            return redirect(request.url)
+
+        if rating and not is_valid_rating(rating):
+            flash(f"'{rating}' is not a valid rating. Please enter a value between 0.0 and 10.0.")
+            return redirect(request.url)
+
         updated_data = {
-            "title": request.form.get("title", "").strip(),
-            "director": request.form.get("director", "").strip(),
-            "year": request.form.get("year", "").strip(),
-            "rating": request.form.get("rating", "").strip(),
+            "title": title,
+            "director": director,
+            "year": year,
+            "rating": normalize_rating(rating) if rating else None
         }
 
         data_manager.update_movie(movie_id, updated_data)
-        flash(f"Movie '{updated_data['title']}' was updated successfully.")
-        return redirect(url_for("user_movies", user_id=user_id))
+        flash(f"Movie '{title}' was updated successfully.")
+        return redirect(url_for("user_movies", user_id=user_id))  # ← hier muss es stehen
 
     return render_template("update_movie.html", user=user, movie=movie)
 

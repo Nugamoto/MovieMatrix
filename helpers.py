@@ -8,5 +8,25 @@ def is_valid_username(name: str) -> bool:
         return False
     return True
 
+
 def get_user_by_id(users: list, user_id: int):
     return next((user for user in users if user.id == user_id), None)
+
+
+def is_valid_year(year: str) -> bool:
+    if not year.isdigit():
+        return False
+    year_int = int(year)
+    return 1880 <= year_int <= 2100
+
+
+def is_valid_rating(rating: str) -> bool:
+    try:
+        float_rating = float(rating)
+        return 0.0 <= float_rating <= 10.0
+    except ValueError:
+        return False
+
+
+def normalize_rating(rating: str) -> float:
+    return round(float(rating), 1)
