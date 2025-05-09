@@ -177,7 +177,7 @@ def user_reviews(user_id):
 
 @app.route("/movies/<int:movie_id>/reviews")
 def movie_reviews(movie_id):
-    movies = data_manager.get_user_movies(movie_id)
+    movies = data_manager.get_all_movies()
     movie = get_movie_by_id(movies, movie_id)
     if not movie:
         flash(f"Movie with ID {movie_id} not found.")
