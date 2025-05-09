@@ -236,6 +236,8 @@ def edit_review(user_id, review_id):
     movies = data_manager.get_user_movies(user_id)
     movie = get_movie_by_id(movies, review.movie_id)
 
+    next_url = request.args.get("next")
+
     if request.method == "POST":
         text = request.form.get("text", "").strip()
         user_rating = request.form.get("user_rating", "").strip()
@@ -251,7 +253,8 @@ def edit_review(user_id, review_id):
 
         data_manager.update_review(review_id, updated_data)
         flash(f"Review for '{movie.title}' updated.")
-        return redirect(url_for("user_reviews", user_id=user_id))
+
+        return redirect(next_url) if next_url else redirect(url_for("user_reviews", user_id=user_id))
 
     return render_template("edit_review.html", user=user, movie=movie, review=review)
 
