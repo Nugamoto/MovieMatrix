@@ -124,3 +124,9 @@ class SQLiteDataManager(DataManagerInterface):
         with self.Session() as session:
             reviews = session.query(Review).filter(Review.movie_id == movie_id).all()
             return reviews
+
+    def get_reviews_by_user(self, user_id: int):
+        """Return all reviews written by a given user."""
+        with self.Session() as session:
+            reviews = session.query(Review).filter(Review.user_id == user_id).all()
+            return reviews
