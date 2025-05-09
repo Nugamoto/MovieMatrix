@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from data_manager_interface import DataManagerInterface
-from datamanager.models import User, Movie
+from datamanager.models import User, Movie, Review
 
 
 class SQLiteDataManager(DataManagerInterface):
@@ -97,3 +97,24 @@ class SQLiteDataManager(DataManagerInterface):
             session.delete(movie)
             session.commit()
             return True
+
+    def add_review(self, user_id: int, movie_id: int, review_data: dict):
+        """Add a review for a movie by a user."""
+        with self.Session() as session:
+            user = session.query(User).get(user_id)
+            movie = session.query(Movie).get(movie_id)
+
+            if not user or not movie:
+                return None
+
+            review = Review(
+                user_id=user_id,
+                movie_id=movie_id,
+                text=review_data.get("text"),
+                user_rating=review_data.get("user_rating")
+            )
+
+            session.add(review)
+            session.commit()
+            session.refresh(review)
+            return review
