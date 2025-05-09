@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+
+{% block title %}Update Movie - {{ movie.title }}{% endblock %}
+
+{% block content %}
+<h1>Update Movie for {{ user.name }}</h1>
+<form method="POST" class="mt-4">
+    <div class="mb-3">
+        <label for="title" class="form-label">Title</label>
+        <input type="text" class="form-control" id="title" name="title" value="{{ movie.title }}" required>
+    </div>
+    <div class="mb-3">
+        <label for="director" class="form-label">Director</label>
+        <input type="text" class="form-control" id="director" name="director" value="{{ movie.director }}">
+    </div>
+    <div class="mb-3">
+        <label for="year" class="form-label">Year</label>
+        <input type="text" class="form-control" id="year" name="year" value="{{ movie.year }}">
+    </div>
+    <div class="mb-3">
+        <label for="rating" class="form-label">Rating</label>
+        <input type="text" class="form-control" id="rating" name="rating" value="{{ movie.rating }}">
+    </div>
+    <button type="submit" class="btn btn-primary">Save Changes</button>
+</form>
+{% endblock %}
