@@ -71,3 +71,19 @@ class SQLiteDataManager(DataManagerInterface):
             session.commit()
             session.refresh(movie)
             return movie
+
+    def update_movie(self, movie_id: int, updated_data: dict):
+        """Update a movie's details."""
+        with self.Session() as session:
+            movie = session.query(Movie).get(movie_id)
+            if not movie:
+                return None
+
+            movie.title = updated_data.get("title", movie.title)
+            movie.director = updated_data.get("director", movie.director)
+            movie.year = updated_data.get("year", movie.year)
+            movie.rating = updated_data.get("rating", movie.rating)
+
+            session.commit()
+            session.refresh(movie)
+            return movie
