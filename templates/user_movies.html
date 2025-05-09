@@ -19,7 +19,10 @@
     <tbody>
     {% for movie in movies %}
     <tr>
-        <td>{{ movie.title }}</td>
+        <td>
+            <a href="{{ url_for('movie_reviews', movie_id=movie.id) }}" title="See reviews">
+                {{ movie.title }}
+            </a></td>
         <td>{{ movie.director }}</td>
         <td>{{ movie.year }}</td>
         <td>{{ movie.rating }}</td>
