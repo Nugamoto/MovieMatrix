@@ -19,20 +19,19 @@
     <tbody>
     {% for movie in movies %}
     <tr>
-        <td>
-            <a href="{{ url_for('movie_reviews', movie_id=movie.id) }}" title="See reviews">
-                {{ movie.title }}
-            </a></td>
+        <td>{{ movie.title }}</td>
         <td>{{ movie.director }}</td>
         <td>{{ movie.year }}</td>
         <td>{{ movie.rating }}</td>
-        <td>
+        <td class="d-flex gap-2 flex-wrap">
             <a href="{{ url_for('update_movie', user_id=user.id, movie_id=movie.id) }}"
                class="btn btn-sm btn-outline-secondary">Edit</a>
             <form method="POST" class="delete-form d-inline"
                   action="{{ url_for('delete_movie', user_id=user.id, movie_id=movie.id) }}">
                 <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
             </form>
+            <a href="{{ url_for('movie_reviews', movie_id=movie.id, user_id=user.id) }}"
+               class="btn btn-sm btn-outline-primary">Reviews</a>
         </td>
     </tr>
     {% endfor %}
