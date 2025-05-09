@@ -5,6 +5,11 @@
 {% block content %}
 <h1>Reviews for "{{ movie.title }}"</h1>
 
+<div class="d-flex justify-content-end mb-2">
+    <a href="{{ url_for('user_movies', user_id=user_id) }}" class="btn btn-outline-primary me-2">
+        Back to Movies
+    </a>
+</div>
 <div class="d-flex justify-content-end mb-3">
     <a href="{{ url_for('add_review', user_id=user_id, movie_id=movie.id) }}" class="btn btn-success">
         Add Review
