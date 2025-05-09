@@ -1,8 +1,14 @@
+import os
+
+from dotenv import load_dotenv
 from flask import Flask, render_template
 
 from datamanager.sqlite_data_manager import SQLiteDataManager
 
+load_dotenv()
+
 app = Flask(__name__)
+app.secret_key = os.getenv("SECRET_KEY")
 data_manager = SQLiteDataManager("sqlite:///moviematrix.sqlite")
 
 
