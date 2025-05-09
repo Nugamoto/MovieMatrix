@@ -4,6 +4,7 @@ from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, flash
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
+from clients.omdb_client import fetch_movie
 from datamanager.sqlite_data_manager import SQLiteDataManager
 from helpers import is_valid_username, get_user_by_id
 
@@ -60,6 +61,33 @@ def user_movies(user_id):
 
     movies = data_manager.get_user_movies(user_id)
     return render_template("user_movies.html", user=user, movies=movies)
+
+
+@app.route('/users/<int:user_id>/add_movie', methods=["GET", "POST"])
+def add_movie(user_id):
+    user = get_user_by_id(data_manager.get_all_users(), user_id)
+    if not user:
+        flash(f"User with ID {user_id} not found.")
+        return redirect(url_for("list_users"))
+
+    if request.method == "POST":
+        title = request.form.get("title", "").strip()
+        year = request.form.get("year", "").strip()
+
+        if not title:
+            flash("Please provide a movie title.")
+            return redirect(request.url)
+
+        movie_data = fetch_movie(title, year)
+        if not movie_data:
+            flash(f"No movie found with title '{title}'.")
+            return redirect(request.url)
+
+        data_manager.add_movie(user_id, movie_data)
+        flash(f"Movie '{movie_data['title']}' added to {user.name}'s list.")
+        return redirect(url_for("user_movies", user_id=user_id))
+
+    return render_template("add_movie.html", user=user)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Add Movie - {{ user.name }}{% endblock %}
+
+{% block content %}
+<h1>Add a Movie for {{ user.name }}</h1>
+<form method="POST" class="mt-4">
+    <div class="mb-3">
+        <label for="title" class="form-label">Movie Title</label>
+        <input type="text" class="form-control" id="title" name="title" required>
+    </div>
+    <div class="mb-3">
+        <label for="year" class="form-label">Year (optional)</label>
+        <input type="text" class="form-control" id="year" name="year">
+    </div>
+    <button type="submit" class="btn btn-primary">Add Movie</button>
+</form>
+{% endblock %}
