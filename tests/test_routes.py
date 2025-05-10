@@ -147,7 +147,47 @@ def test_add_movie_invalid(client):
 
 
 def test_update_movie_valid(client):
-    pass
+    """Test updating a movie's data after it's added to a user."""
+    username = f"UpdateUser_{uuid.uuid4().hex[:6]}"
+    original_title = "Inception"
+    updated_title = "Inception Updated"
+
+    # Step 1: Create a user
+    client.post("/add_user", data={"name": username}, follow_redirects=True)
+
+    # Step 2: Get user ID
+    response = client.get("/users")
+    soup = BeautifulSoup(response.data, "html.parser")
+    user_row = next((r for r in soup.find_all("tr") if username in r.text), None)
+    user_id = user_row.find("a", href=True)["href"].split("/")[-1]
+
+    # Step 3: Add movie via OMDb (title + year)
+    client.post(
+        f"/users/{user_id}/add_movie",
+        data={"title": original_title, "year": "2010"},
+        follow_redirects=True
+    )
+
+    # Step 4: Get movie ID from /users/<user_id>
+    movie_list = client.get(f"/users/{user_id}")
+    soup = BeautifulSoup(movie_list.data, "html.parser")
+    movie_row = next((r for r in soup.find_all("tr") if original_title in r.text), None)
+    assert movie_row is not None
+    movie_id = movie_row.find("a", href=lambda x: x and "/update_movie/" in x)["href"].split("/")[-1]
+
+    # Step 5: Submit update
+    update_response = client.post(
+        f"/users/{user_id}/update_movie/{movie_id}",
+        data={
+            "title": updated_title,
+            "director": "Nolan",
+            "year": "2010",
+            "rating": "9.0"
+        },
+        follow_redirects=True
+    )
+    assert update_response.status_code == 200
+    assert bytes(updated_title, "utf-8") in update_response.data
 
 
 def test_update_movie_invalid(client):
