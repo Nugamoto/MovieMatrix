@@ -239,7 +239,49 @@ def test_update_movie_invalid(client):
 
 
 def test_delete_movie_valid(client):
-    pass
+    """Test that a movie can be deleted successfully and no longer appears in the user's movie list."""
+    username = f"DeleteMovieUser_{uuid.uuid4().hex[:6]}"
+    movie_title = "The Matrix"
+
+    # Create user
+    client.post("/add_user", data={"name": username}, follow_redirects=True)
+
+    # Extract user ID
+    response = client.get("/users")
+    soup = BeautifulSoup(response.data, "html.parser")
+    user_row = next((r for r in soup.find_all("tr") if username in r.text), None)
+    user_id = user_row.find("a", href=True)["href"].split("/")[-1]
+
+    # Add movie
+    client.post(
+        f"/users/{user_id}/add_movie",
+        data={"title": movie_title, "director": "Test", "year": "2020", "rating": "6.5"},
+        follow_redirects=True
+    )
+
+    # Get user movies page and locate the movie row
+    movie_page = client.get(f"/users/{user_id}")
+    soup = BeautifulSoup(movie_page.data, "html.parser")
+    movie_table = soup.find("table", class_="table")
+    movie_row = next((r for r in movie_table.find_all("tr") if movie_title in r.text), None)
+    assert movie_row is not None
+
+    # Extract movie ID and delete
+    delete_form = movie_row.find("form", {"action": lambda x: x and "delete_movie" in x})
+    assert delete_form is not None
+    movie_id = delete_form["action"].split("/")[-1]
+
+    delete_response = client.post(
+        f"/users/{user_id}/delete_movie/{movie_id}",
+        follow_redirects=True
+    )
+    assert delete_response.status_code == 200
+
+    # Check that movie is no longer in the table
+    soup = BeautifulSoup(delete_response.data, "html.parser")
+    movie_table = soup.find("table", class_="table")
+    rows = movie_table.find_all("tr") if movie_table else []
+    assert all(movie_title not in row.text for row in rows)
 
 
 def test_delete_movie_invalid(client):
