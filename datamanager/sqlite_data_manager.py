@@ -1,8 +1,12 @@
+import logging
+
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker, joinedload
 
 from datamanager.data_manager_interface import DataManagerInterface
 from datamanager.models import User, Movie, Review
+
+logger = logging.getLogger(__name__)
 
 
 class SQLiteDataManager(DataManagerInterface):
@@ -61,9 +65,14 @@ class SQLiteDataManager(DataManagerInterface):
         with self.Session() as session:
             user = User(name=name)
             session.add(user)
-            session.commit()
-            session.refresh(user)
-            return user
+            try:
+                session.commit()
+                session.refresh(user)
+                return user
+            except Exception as e:
+                logger.error("Failed to add user '%s': %s", name, e)
+                session.rollback()
+                raise
 
     def update_user(self, user_id: int, new_name: str):
         """Update the name of a user by their ID.
@@ -78,6 +87,7 @@ class SQLiteDataManager(DataManagerInterface):
         with self.Session() as session:
             user = session.get(User, user_id)
             if not user:
+                logger.warning("Update failed: User ID %d not found.", user_id)
                 return None
             user.name = new_name
             session.commit()
@@ -96,6 +106,7 @@ class SQLiteDataManager(DataManagerInterface):
         with self.Session() as session:
             user = session.get(User, user_id)
             if not user:
+                logger.warning("Delete failed: User ID %d not found.", user_id)
                 return False
             session.delete(user)
             session.commit()
@@ -114,6 +125,7 @@ class SQLiteDataManager(DataManagerInterface):
         with self.Session() as session:
             user = session.get(User, user_id)
             if not user:
+                logger.warning("Add movie failed: User ID %d not found.", user_id)
                 return None
 
             movie = Movie(
@@ -125,9 +137,14 @@ class SQLiteDataManager(DataManagerInterface):
             )
 
             session.add(movie)
-            session.commit()
-            session.refresh(movie)
-            return movie
+            try:
+                session.commit()
+                session.refresh(movie)
+                return movie
+            except Exception as e:
+                logger.error("Failed to add movie for user %d: %s", user_id, e)
+                session.rollback()
+                raise
 
     def update_movie(self, movie_id: int, updated_data: dict):
         """Update a movie's details.
@@ -142,6 +159,7 @@ class SQLiteDataManager(DataManagerInterface):
         with self.Session() as session:
             movie = session.get(Movie, movie_id)
             if not movie:
+                logger.warning("Update failed: Movie ID %d not found.", movie_id)
                 return None
 
             movie.title = updated_data.get("title", movie.title)
@@ -165,6 +183,7 @@ class SQLiteDataManager(DataManagerInterface):
         with self.Session() as session:
             movie = session.get(Movie, movie_id)
             if not movie:
+                logger.warning("Delete failed: Movie ID %d not found.", movie_id)
                 return False
             session.delete(movie)
             session.commit()
@@ -186,6 +205,10 @@ class SQLiteDataManager(DataManagerInterface):
             movie = session.get(Movie, movie_id)
 
             if not user or not movie:
+                logger.warning(
+                    "Add review failed: user_id=%d or movie_id=%d not found.",
+                    user_id, movie_id
+                )
                 return None
 
             review = Review(
@@ -196,9 +219,17 @@ class SQLiteDataManager(DataManagerInterface):
             )
 
             session.add(review)
-            session.commit()
-            session.refresh(review)
-            return review
+            try:
+                session.commit()
+                session.refresh(review)
+                return review
+            except Exception as e:
+                logger.error(
+                    "Failed to add review: user_id=%d, movie_id=%d, error=%s",
+                    user_id, movie_id, e
+                )
+                session.rollback()
+                raise
 
     def get_reviews_for_movie(self, movie_id: int):
         """Return all reviews for a given movie, including user data.
@@ -241,6 +272,7 @@ class SQLiteDataManager(DataManagerInterface):
         with self.Session() as session:
             review = session.get(Review, review_id)
             if not review:
+                logger.warning("Update failed: Review ID %d not found.", review_id)
                 return None
 
             review.text = updated_data.get("text", review.text)
@@ -262,6 +294,7 @@ class SQLiteDataManager(DataManagerInterface):
         with self.Session() as session:
             review = session.get(Review, review_id)
             if not review:
+                logger.warning("Delete failed: Review ID %d not found.", review_id)
                 return False
             session.delete(review)
             session.commit()
