@@ -19,7 +19,13 @@ from helpers import (
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev")
 
-data_manager = SQLiteDataManager("sqlite:///moviematrix.sqlite")
+DB_FILENAME = "moviematrix.sqlite"
+
+# Use test DB if testing mode is active
+if os.environ.get("FLASK_ENV") == "testing":
+    DB_FILENAME = "test_moviematrix.sqlite"
+
+data_manager = SQLiteDataManager(f"sqlite:///{DB_FILENAME}")
 
 # Logging configuration
 if not os.path.exists("logs"):

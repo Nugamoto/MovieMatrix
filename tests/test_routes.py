@@ -1,10 +1,13 @@
+import uuid
+
 import pytest
+from bs4 import BeautifulSoup
 
 # --- Constants used in response content checks ---
 APP_TITLE = b"MovieMatrix"
 USERS_HEADING = b"Users"
 ADD_USER_BUTTON = b"Add User"
-MOVIE_TABLE_HEADER = b"Title"
+INVALID_USERNAME_MSG = b"Please enter a valid username"
 
 
 def test_home_page(client):
@@ -35,30 +38,45 @@ def test_add_user_invalid(client, invalid_name):
     """Test that invalid usernames are rejected by the form validation."""
     response = client.post("/add_user", data={"name": invalid_name}, follow_redirects=True)
     assert response.status_code == 200
-    assert b"Please enter a valid username" in response.data
+    assert INVALID_USERNAME_MSG in response.data
 
 
-def test_delete_user_valid(client, data_manager):
-    """Test that an existing user can be deleted successfully."""
-    client.post("/add_user", data={"name": "ToBeDeleted"}, follow_redirects=True)
+def test_delete_user_valid(client):
+    """Test that an existing user can be deleted successfully and is removed from the user table."""
+    unique_name = f"ToBeDeleted_{uuid.uuid4().hex[:8]}"
+    client.post("/add_user", data={"name": unique_name}, follow_redirects=True)
 
-    users = data_manager.get_all_users()
-    target_user = next((u for u in users if u.name == "ToBeDeleted"), None)
-    assert target_user is not None
+    # Get /users page and find the row with the test user
+    response = client.get("/users")
+    soup = BeautifulSoup(response.data, "html.parser")
+    matching_row = next((row for row in soup.find_all("tr") if unique_name in row.text), None)
+    assert matching_row is not None
 
-    response = client.post(f"/delete_user/{target_user.id}", follow_redirects=True)
+    # Get the delete form and extract user_id
+    delete_form = matching_row.find("form", {"action": lambda x: x and "delete_user" in x})
+    assert delete_form is not None
+    user_id = delete_form["action"].split("/")[-1]
 
-    assert response.status_code == 200
-    assert b"ToBeDeleted" not in response.data
+    # Submit the deletion and verify user is no longer in table
+    delete_response = client.post(f"/delete_user/{user_id}", follow_redirects=True)
+    assert delete_response.status_code == 200
+    soup = BeautifulSoup(delete_response.data, "html.parser")
+    remaining_rows = soup.find_all("tr")
+    assert all(unique_name not in row.text for row in remaining_rows)
 
 
 def test_delete_user_invalid(client):
     """Test that deleting a non-existent user does not break the app."""
     response = client.post("/delete_user/9999", follow_redirects=True)
-
     assert response.status_code == 200
-    assert b"not found" in response.data or b"deleted" not in response.data
 
+    soup = BeautifulSoup(response.data, "html.parser")
+    alert_box = soup.find("div", class_="alert")
+    assert alert_box is not None
+    assert "not found" in alert_box.text.lower() or "could not" in alert_box.text.lower()
+
+
+# --- Placeholder tests for future implementation ---
 
 def test_user_movies_page(client):
     pass
