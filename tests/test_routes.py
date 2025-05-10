@@ -285,7 +285,30 @@ def test_delete_movie_valid(client):
 
 
 def test_delete_movie_invalid(client):
-    pass
+    """Test that deleting a non-existent movie does not break the app."""
+    # Create a user
+    username = f"InvalidMovieUser_{uuid.uuid4().hex[:6]}"
+    client.post("/add_user", data={"name": username}, follow_redirects=True)
+
+    # Extract user ID
+    response = client.get("/users")
+    soup = BeautifulSoup(response.data, "html.parser")
+    user_row = next((r for r in soup.find_all("tr") if username in r.text), None)
+    assert user_row is not None
+    user_id = user_row.find("a", href=True)["href"].split("/")[-1]
+
+    # Try to delete a movie with a clearly non-existent ID
+    delete_response = client.post(
+        f"/users/{user_id}/delete_movie/9999",
+        follow_redirects=True
+    )
+    assert delete_response.status_code == 200
+
+    # Check for a meaningful error message
+    soup = BeautifulSoup(delete_response.data, "html.parser")
+    alert_box = soup.find("div", class_="alert")
+    assert alert_box is not None
+    assert "not found" in alert_box.text.lower() or "could not" in alert_box.text.lower()
 
 
 def test_user_reviews_page(client):
