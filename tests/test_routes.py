@@ -99,11 +99,8 @@ def test_user_movies_page(client):
 
 
 def test_add_movie_valid(client):
-    """Test that a movie can be added to a user and appears in their movie list."""
+    """Test that a valid movie title is fetched via OMDb and added to a user's list."""
     username = f"MovieAdder_{uuid.uuid4().hex[:6]}"
-    movie_title = f"Test Movie {uuid.uuid4().hex[:4]}"
-
-    # Create user
     client.post("/add_user", data={"name": username}, follow_redirects=True)
 
     # Extract user ID
@@ -113,25 +110,40 @@ def test_add_movie_valid(client):
     assert user_row is not None
     user_id = user_row.find("a", {"href": lambda x: x and "/users/" in x})["href"].split("/")[-1]
 
-    # Add movie manually (bypassing OMDb)
-    add_response = client.post(
+    # Use a valid movie title known to OMDb
+    response = client.post(
         f"/users/{user_id}/add_movie",
-        data={
-            "title": movie_title,
-            "director": "Test Director",
-            "year": "2023",
-            "rating": "8.5"
-        },
+        data={"title": "Inception", "year": "2010"},
         follow_redirects=True
     )
-    assert add_response.status_code == 200
-
-    # Verify that the movie appears in the user's movie list
-    assert bytes(movie_title, "utf-8") in add_response.data
+    assert response.status_code == 200
+    assert b"Inception" in response.data
 
 
 def test_add_movie_invalid(client):
-    pass
+    """Test that a non-existent movie title is rejected and not added."""
+    username = f"OMDbFailUser_{uuid.uuid4().hex[:6]}"
+    client.post("/add_user", data={"name": username}, follow_redirects=True)
+
+    # Extract user ID
+    response = client.get("/users")
+    soup = BeautifulSoup(response.data, "html.parser")
+    user_row = next((row for row in soup.find_all("tr") if username in row.text), None)
+    assert user_row is not None
+    user_id = user_row.find("a", {"href": lambda x: x and "/users/" in x})["href"].split("/")[-1]
+
+    # Submit nonsense movie title
+    response = client.post(
+        f"/users/{user_id}/add_movie",
+        data={"title": "DefinitelyNotARealMovie123456", "year": "2024"},
+        follow_redirects=True
+    )
+    assert response.status_code == 200
+
+    soup = BeautifulSoup(response.data, "html.parser")
+    alert = soup.find("div", class_="alert")
+    assert alert is not None
+    assert "no movie found" in alert.text.lower()
 
 
 def test_update_movie_valid(client):
