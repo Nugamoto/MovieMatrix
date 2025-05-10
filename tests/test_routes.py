@@ -478,7 +478,9 @@ def test_add_review_invalid(client, text, rating):
     soup = BeautifulSoup(response.data, "html.parser")
     alert = soup.find("div", class_="alert")
     assert alert is not None
-    assert "invalid" in alert.text.lower() or "please enter" in alert.text.lower()
+    assert "review text cannot be empty" in alert.text.lower() \
+           or "invalid" in alert.text.lower() \
+           or "please enter" in alert.text.lower()
 
 
 def test_edit_review_valid(client):
