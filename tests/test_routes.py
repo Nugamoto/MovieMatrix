@@ -596,7 +596,55 @@ def test_edit_review_invalid(client, text, rating):
 
 
 def test_delete_review_valid(client):
-    pass
+    """Test that a review can be deleted and is no longer visible on the user's reviews page."""
+    username = f"ReviewDeleter_{uuid.uuid4().hex[:6]}"
+    movie_title = "Interstellar"
+
+    # Create user
+    client.post("/add_user", data={"name": username}, follow_redirects=True)
+
+    # Get user ID
+    response = client.get("/users")
+    soup = BeautifulSoup(response.data, "html.parser")
+    user_row = next((r for r in soup.find_all("tr") if username in r.text), None)
+    user_id = user_row.find("a", href=True)["href"].split("/")[-1]
+
+    # Add movie
+    client.post(
+        f"/users/{user_id}/add_movie",
+        data={"title": movie_title, "director": "Nolan", "year": "2014", "rating": "9.0"},
+        follow_redirects=True
+    )
+
+    # Get movie ID
+    response = client.get(f"/users/{user_id}")
+    soup = BeautifulSoup(response.data, "html.parser")
+    movie_row = next((r for r in soup.find_all("tr") if movie_title in r.text), None)
+    movie_id = movie_row.find("a", {"href": lambda x: x and "/reviews" in x})["href"].split("/")[-2]
+
+    # Add review
+    client.post(
+        f"/users/{user_id}/movies/{movie_id}/add_review",
+        data={"text": "Masterpiece", "user_rating": "9.5"},
+        follow_redirects=True
+    )
+
+    # Get review ID
+    response = client.get(f"/users/{user_id}/reviews")
+    soup = BeautifulSoup(response.data, "html.parser")
+    review_row = next((r for r in soup.find_all("tr") if "Masterpiece" in r.text), None)
+    review_id = review_row.find("form")["action"].split("/")[-1]
+
+    # Delete the review
+    delete_response = client.post(
+        f"/users/{user_id}/delete_review/{review_id}",
+        follow_redirects=True
+    )
+    assert delete_response.status_code == 200
+
+    # Confirm it's gone
+    soup = BeautifulSoup(delete_response.data, "html.parser")
+    assert "Masterpiece" not in soup.get_text()
 
 
 def test_delete_review_invalid(client):
