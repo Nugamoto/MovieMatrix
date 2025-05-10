@@ -315,7 +315,7 @@ def delete_review(user_id, review_id):
 
 
 @app.errorhandler(404)
-def page_not_found():
+def page_not_found(e):
     logger.warning("404 error: %s", request.path)
     return render_template("404.html"), 404
 
@@ -334,7 +334,7 @@ def handle_sqlalchemy_error(e):
 
 
 @app.errorhandler(Exception)
-def handle_unexpected_error():
+def handle_unexpected_error(e):
     logger.exception("Unhandled exception:")
     return render_template("500.html"), 500
 
