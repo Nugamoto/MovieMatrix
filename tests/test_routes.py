@@ -99,7 +99,35 @@ def test_user_movies_page(client):
 
 
 def test_add_movie_valid(client):
-    pass
+    """Test that a movie can be added to a user and appears in their movie list."""
+    username = f"MovieAdder_{uuid.uuid4().hex[:6]}"
+    movie_title = f"Test Movie {uuid.uuid4().hex[:4]}"
+
+    # Create user
+    client.post("/add_user", data={"name": username}, follow_redirects=True)
+
+    # Extract user ID
+    response = client.get("/users")
+    soup = BeautifulSoup(response.data, "html.parser")
+    user_row = next((row for row in soup.find_all("tr") if username in row.text), None)
+    assert user_row is not None
+    user_id = user_row.find("a", {"href": lambda x: x and "/users/" in x})["href"].split("/")[-1]
+
+    # Add movie manually (bypassing OMDb)
+    add_response = client.post(
+        f"/users/{user_id}/add_movie",
+        data={
+            "title": movie_title,
+            "director": "Test Director",
+            "year": "2023",
+            "rating": "8.5"
+        },
+        follow_redirects=True
+    )
+    assert add_response.status_code == 200
+
+    # Verify that the movie appears in the user's movie list
+    assert bytes(movie_title, "utf-8") in add_response.data
 
 
 def test_add_movie_invalid(client):
