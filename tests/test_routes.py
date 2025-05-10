@@ -484,7 +484,55 @@ def test_add_review_invalid(client, text, rating):
 
 
 def test_edit_review_valid(client):
-    pass
+    """Test that an existing review can be edited successfully."""
+    username = f"EditReviewUser_{uuid.uuid4().hex[:6]}"
+    movie_title = "Interstellar"
+
+    # Create user
+    client.post("/add_user", data={"name": username}, follow_redirects=True)
+
+    # Get user ID
+    response = client.get("/users")
+    soup = BeautifulSoup(response.data, "html.parser")
+    user_row = next((r for r in soup.find_all("tr") if username in r.text), None)
+    user_id = user_row.find("a", href=True)["href"].split("/")[-1]
+
+    # Add movie
+    client.post(
+        f"/users/{user_id}/add_movie",
+        data={"title": movie_title, "director": "Christopher Nolan", "year": "2014", "rating": "8.5"},
+        follow_redirects=True
+    )
+
+    # Get movie ID
+    response = client.get(f"/users/{user_id}")
+    soup = BeautifulSoup(response.data, "html.parser")
+    movie_row = next((r for r in soup.find_all("tr") if movie_title in r.text), None)
+    movie_id = movie_row.find("a", {"href": lambda x: x and "/reviews" in x})["href"].split("/")[-2]
+
+    # Add review
+    client.post(
+        f"/users/{user_id}/movies/{movie_id}/add_review",
+        data={"text": "Initial review", "user_rating": "7.0"},
+        follow_redirects=True
+    )
+
+    # Get review ID
+    response = client.get(f"/users/{user_id}/reviews")
+    soup = BeautifulSoup(response.data, "html.parser")
+    review_row = next((r for r in soup.find_all("tr") if "Initial review" in r.text), None)
+    review_id = review_row.find("form")["action"].split("/")[-1]
+
+    # Edit review
+    edit_response = client.post(
+        f"/users/{user_id}/edit_review/{review_id}",
+        data={"text": "Updated review", "user_rating": "8.0"},
+        follow_redirects=True
+    )
+
+    assert edit_response.status_code == 200
+    assert b"Updated review" in edit_response.data
+    assert b"Initial review" not in edit_response.data
 
 
 def test_edit_review_invalid(client):
