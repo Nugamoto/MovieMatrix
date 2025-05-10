@@ -3,9 +3,8 @@
 {% block title %}{{ user.name }}'s Reviews - MovieMatrix{% endblock %}
 
 {% block content %}
-<h1>Reviews by {{ user.name }}</h1>
-
-<div class="d-flex justify-content-end mb-3">
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>Reviews by {{ user.name }}</h1>
     <a href="{{ url_for('list_users') }}" class="btn btn-outline-secondary">
         Back to Users
     </a>

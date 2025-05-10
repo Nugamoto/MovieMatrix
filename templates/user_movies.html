@@ -3,13 +3,12 @@
 {% block title %}{{ user.name }}'s Movies - MovieMatrix{% endblock %}
 
 {% block content %}
-<h1>{{ user.name }}'s Favorite Movies</h1>
-
-<div class="d-flex justify-content-end mb-2">
-    <a href="{{ url_for('list_users') }}" class="btn btn-outline-secondary">Back to Users</a>
-</div>
-<div class="d-flex justify-content-end mb-3">
-    <a href="{{ url_for('add_movie', user_id=user.id) }}" class="btn btn-success">Add Movie</a>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1>{{ user.name }}'s Favorite Movies</h1>
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('add_movie', user_id=user.id) }}" class="btn btn-success">Add Movie</a>
+        <a href="{{ url_for('list_users') }}" class="btn btn-outline-secondary">Back to Users</a>
+    </div>
 </div>
 
 {% if movies %}
@@ -38,7 +37,8 @@
                 <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
             </form>
             <a href="{{ url_for('movie_reviews', movie_id=movie.id, user_id=user.id) }}"
-               class="btn btn-sm btn-outline-success">Reviews</a></td>
+               class="btn btn-sm btn-outline-success">Reviews</a>
+        </td>
     </tr>
     {% endfor %}
     </tbody>
