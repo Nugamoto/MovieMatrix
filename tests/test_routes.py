@@ -434,8 +434,51 @@ def test_add_review_valid(client):
     assert bytes(review_text, "utf-8") in response.data
 
 
-def test_add_review_invalid(client):
-    pass
+@pytest.mark.parametrize("text,rating", [
+    ("", "8.5"),  # Missing review text
+    ("Nice movie", ""),  # Missing rating
+    ("Nice movie", "eleven"),  # Invalid non-numeric rating
+    ("Nice movie", "11.0"),  # Out-of-range rating
+])
+def test_add_review_invalid(client, text, rating):
+    """Test that invalid reviews are rejected and not shown."""
+    username = f"ReviewInvalidUser_{uuid.uuid4().hex[:6]}"
+    movie_title = "Inception"
+
+    # Create user
+    client.post("/add_user", data={"name": username}, follow_redirects=True)
+
+    # Extract user ID
+    response = client.get("/users")
+    soup = BeautifulSoup(response.data, "html.parser")
+    user_row = next((r for r in soup.find_all("tr") if username in r.text), None)
+    user_id = user_row.find("a", href=True)["href"].split("/")[-1]
+
+    # Add movie
+    client.post(
+        f"/users/{user_id}/add_movie",
+        data={"title": movie_title, "director": "Christopher Nolan", "year": "2010", "rating": "9.0"},
+        follow_redirects=True
+    )
+
+    # Get movie ID
+    response = client.get(f"/users/{user_id}")
+    soup = BeautifulSoup(response.data, "html.parser")
+    movie_row = next((r for r in soup.find_all("tr") if movie_title in r.text), None)
+    movie_id = movie_row.find("a", {"href": lambda x: x and "/reviews" in x})["href"].split("/")[-2]
+
+    # Attempt to post invalid review
+    response = client.post(
+        f"/users/{user_id}/movies/{movie_id}/add_review",
+        data={"text": text, "user_rating": rating},
+        follow_redirects=True
+    )
+
+    assert response.status_code == 200
+    soup = BeautifulSoup(response.data, "html.parser")
+    alert = soup.find("div", class_="alert")
+    assert alert is not None
+    assert "invalid" in alert.text.lower() or "please enter" in alert.text.lower()
 
 
 def test_edit_review_valid(client):
