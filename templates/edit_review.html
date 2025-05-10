@@ -11,10 +11,16 @@
         <textarea class="form-control" id="text" name="text" rows="4" required>{{ review.text }}</textarea>
     </div>
     <div class="mb-3">
-        <label for="user_rating" class="form-label">Rating (0.0 - 10.0)</label>
+        <label for="user_rating" class="form-label">Rating (0.0 – 10.0)</label>
         <input type="text" class="form-control" id="user_rating" name="user_rating" value="{{ review.user_rating }}"
                required>
     </div>
-    <button type="submit" class="btn btn-primary">Update Review</button>
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-success">Update Review</button>
+        <a href="{{ request.args.get('next') or url_for('user_reviews', user_id=user.id) }}"
+           class="btn btn-outline-secondary">
+            Cancel
+        </a>
+    </div>
 </form>
 {% endblock %}

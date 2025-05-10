@@ -1,9 +1,10 @@
 {% extends "base.html" %}
 
-{% block title %}Update Movie - {{ movie.title }}{% endblock %}
+{% block title %}Update Movie - MovieMatrix{% endblock %}
 
 {% block content %}
-<h1>Update Movie for {{ user.name }}</h1>
+<h1>Update "{{ movie.title }}"</h1>
+
 <form method="POST" class="mt-4">
     <div class="mb-3">
         <label for="title" class="form-label">Title</label>
@@ -18,9 +19,12 @@
         <input type="text" class="form-control" id="year" name="year" value="{{ movie.year }}">
     </div>
     <div class="mb-3">
-        <label for="rating" class="form-label">Rating</label>
+        <label for="rating" class="form-label">Rating (0.0 – 10.0)</label>
         <input type="text" class="form-control" id="rating" name="rating" value="{{ movie.rating }}">
     </div>
-    <button type="submit" class="btn btn-primary">Save Changes</button>
+    <div class="mt-4 d-flex gap-2">
+        <button type="submit" class="btn btn-success">Update Movie</button>
+        <a href="{{ url_for('user_movies', user_id=user.id) }}" class="btn btn-outline-secondary">Cancel</a>
+    </div>
 </form>
 {% endblock %}
