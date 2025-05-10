@@ -38,12 +38,26 @@ def test_add_user_invalid(client, invalid_name):
     assert b"Please enter a valid username" in response.data
 
 
-def test_delete_user_valid(client):
-    pass
+def test_delete_user_valid(client, data_manager):
+    """Test that an existing user can be deleted successfully."""
+    client.post("/add_user", data={"name": "ToBeDeleted"}, follow_redirects=True)
+
+    users = data_manager.get_all_users()
+    target_user = next((u for u in users if u.name == "ToBeDeleted"), None)
+    assert target_user is not None
+
+    response = client.post(f"/delete_user/{target_user.id}", follow_redirects=True)
+
+    assert response.status_code == 200
+    assert b"ToBeDeleted" not in response.data
 
 
 def test_delete_user_invalid(client):
-    pass
+    """Test that deleting a non-existent user does not break the app."""
+    response = client.post("/delete_user/9999", follow_redirects=True)
+
+    assert response.status_code == 200
+    assert b"not found" in response.data or b"deleted" not in response.data
 
 
 def test_user_movies_page(client):
