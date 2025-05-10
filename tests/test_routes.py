@@ -2,6 +2,12 @@ import pytest
 
 from app import app
 
+# --- Constants used in response content checks ---
+APP_TITLE = b"MovieMatrix"
+USERS_HEADING = b"Users"
+ADD_USER_BUTTON = b"Add User"
+MOVIE_TABLE_HEADER = b"Title"
+
 
 @pytest.fixture
 def client():
@@ -11,11 +17,18 @@ def client():
 
 
 def test_home_page(client):
-    pass
+    """Test that the home page loads and shows the app title."""
+    response = client.get("/")
+    assert response.status_code == 200
+    assert APP_TITLE in response.data
 
 
 def test_users_page(client):
-    pass
+    """Test that the users page loads and contains the users header."""
+    response = client.get("/users")
+    assert response.status_code == 200
+    assert USERS_HEADING in response.data
+    assert ADD_USER_BUTTON in response.data
 
 
 def test_add_user_valid(client):
