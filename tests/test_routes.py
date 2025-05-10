@@ -76,10 +76,26 @@ def test_delete_user_invalid(client):
     assert "not found" in alert_box.text.lower() or "could not" in alert_box.text.lower()
 
 
-# --- Placeholder tests for future implementation ---
-
 def test_user_movies_page(client):
-    pass
+    """Test that a user's movie page loads correctly and shows their movie list."""
+    # Create a user with a unique name
+    username = f"MovieUser_{uuid.uuid4().hex[:6]}"
+    client.post("/add_user", data={"name": username}, follow_redirects=True)
+
+    # Fetch /users page to extract the user ID
+    response = client.get("/users")
+    soup = BeautifulSoup(response.data, "html.parser")
+    user_row = next((row for row in soup.find_all("tr") if username in row.text), None)
+    assert user_row is not None
+
+    user_id = user_row.find("a", {"href": lambda x: x and "/users/" in x})["href"].split("/")[-1]
+
+    # Request the user movies page
+    movie_page = client.get(f"/users/{user_id}")
+    assert movie_page.status_code == 200
+
+    # Verify that the user's name appears on the page
+    assert bytes(username, "utf-8") in movie_page.data
 
 
 def test_add_movie_valid(client):
