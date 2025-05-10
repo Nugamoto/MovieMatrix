@@ -191,7 +191,51 @@ def test_update_movie_valid(client):
 
 
 def test_update_movie_invalid(client):
-    pass
+    """Test that updating a movie with invalid data fails and shows validation feedback."""
+    username = f"InvalidUpdateUser_{uuid.uuid4().hex[:6]}"
+    movie_title = "Interstellar"
+
+    # Create a user
+    client.post("/add_user", data={"name": username}, follow_redirects=True)
+
+    # Extract user ID
+    response = client.get("/users")
+    soup = BeautifulSoup(response.data, "html.parser")
+    user_row = next((r for r in soup.find_all("tr") if username in r.text), None)
+    user_id = user_row.find("a", href=True)["href"].split("/")[-1]
+
+    # Add a movie for the user
+    client.post(
+        f"/users/{user_id}/add_movie",
+        data={"title": movie_title, "year": "2014"},
+        follow_redirects=True
+    )
+
+    # Get movie ID from user's movie list
+    movie_page = client.get(f"/users/{user_id}")
+    soup = BeautifulSoup(movie_page.data, "html.parser")
+    movie_row = next((r for r in soup.find_all("tr") if movie_title in r.text), None)
+    movie_id = movie_row.find("a", href=lambda x: x and "/update_movie/" in x)["href"].split("/")[-1]
+
+    # Submit invalid update (non-numeric year, out-of-range rating)
+    update_response = client.post(
+        f"/users/{user_id}/update_movie/{movie_id}",
+        data={
+            "title": "Still Interstellar",
+            "director": "Christopher Nolan",
+            "year": "twenty",  # invalid year
+            "rating": "15"  # invalid rating (too high)
+        },
+        follow_redirects=True
+    )
+
+    assert update_response.status_code == 200
+
+    # Verify that an error message is displayed
+    soup = BeautifulSoup(update_response.data, "html.parser")
+    alert = soup.find("div", class_="alert")
+    assert alert is not None
+    assert "valid year" in alert.text.lower() or "valid rating" in alert.text.lower()
 
 
 def test_delete_movie_valid(client):
