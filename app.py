@@ -2,33 +2,37 @@ import logging
 import os
 from logging.handlers import RotatingFileHandler
 
-from flask import Flask, render_template, redirect, url_for, request, flash
+from dotenv import load_dotenv
+from flask import Flask, render_template, request, redirect, url_for, flash
 from sqlalchemy.exc import SQLAlchemyError
 
+from clients.omdb_client import fetch_movie
 from datamanager.sqlite_data_manager import SQLiteDataManager
 from helpers import (
     is_valid_username,
     get_user_by_id,
     get_movie_by_id,
     get_review_by_id,
-    is_valid_rating,
     is_valid_year,
+    is_valid_rating,
     normalize_rating,
-    is_valid_movie_data
 )
 
+# Load environment variables
+load_dotenv()
+
+# Flask setup
 app = Flask(__name__)
-app.secret_key = os.environ.get("SECRET_KEY", "dev")
+app.secret_key = os.getenv("SECRET_KEY", "dev")
 
+# Data manager setup
 DB_FILENAME = "moviematrix.sqlite"
-
-# Use test DB if testing mode is active
 if os.environ.get("FLASK_ENV") == "testing":
     DB_FILENAME = "test_moviematrix.sqlite"
 
 data_manager = SQLiteDataManager(f"sqlite:///{DB_FILENAME}")
 
-# Logging configuration
+# Logging setup
 if not os.path.exists("logs"):
     os.mkdir("logs")
 
@@ -103,7 +107,7 @@ def user_movies(user_id):
     return render_template("user_movies.html", user=user, movies=movies)
 
 
-@app.route("/users/<int:user_id>/add_movie", methods=["GET", "POST"])
+@app.route('/users/<int:user_id>/add_movie', methods=["GET", "POST"])
 def add_movie(user_id):
     user = get_user_by_id(data_manager.get_all_users(), user_id)
     if not user:
@@ -113,35 +117,23 @@ def add_movie(user_id):
 
     if request.method == "POST":
         title = request.form.get("title", "").strip()
-        director = request.form.get("director", "").strip()
         year = request.form.get("year", "").strip()
-        rating = request.form.get("rating", "").strip()
 
-        if year and not is_valid_year(year):
-            flash(f"'{year}' is not a valid year.")
-            logger.warning("Invalid year input: '%s'", year)
-            return redirect(request.url)
-
-        if rating and not is_valid_rating(rating):
-            flash(f"'{rating}' is not a valid rating. Please enter a value between 0.0 and 10.0.")
-            logger.warning("Invalid rating input: '%s'", rating)
-            return redirect(request.url)
-
-        movie_data = {
-            "title": title,
-            "director": director,
-            "year": year,
-            "rating": normalize_rating(rating) if rating else None,
-        }
-
-        if not is_valid_movie_data(movie_data):
-            flash("Title is required.")
+        if not title:
+            flash("Please provide a movie title.")
             logger.warning("Add movie failed: empty title")
             return redirect(request.url)
 
+        movie_data = fetch_movie(title, year)
+
+        if not movie_data:
+            flash(f"No movie found with title '{title}'.")
+            logger.warning("OMDb returned no result for '%s' (%s)", title, year)
+            return redirect(request.url)
+
         data_manager.add_movie(user_id, movie_data)
-        logger.info("Movie added for user %d: '%s'", user_id, title)
-        flash(f"Movie '{title}' was added.")
+        logger.info("Movie '%s' added to user %d via OMDb", movie_data['title'], user_id)
+        flash(f"Movie '{movie_data['title']}' added to {user.name}'s list.")
         return redirect(url_for("user_movies", user_id=user_id))
 
     return render_template("add_movie.html", user=user)
