@@ -1,3 +1,5 @@
+import pytest
+
 # --- Constants used in response content checks ---
 APP_TITLE = b"MovieMatrix"
 USERS_HEADING = b"Users"
@@ -21,11 +23,19 @@ def test_users_page(client):
 
 
 def test_add_user_valid(client):
-    pass
+    """Test adding a new user via POST with valid data."""
+    response = client.post("/add_user", data={"name": "TestUser"}, follow_redirects=True)
+    assert response.status_code == 200
+    assert USERS_HEADING in response.data
+    assert b"TestUser" in response.data
 
 
-def test_add_user_invalid(client):
-    pass
+@pytest.mark.parametrize("invalid_name", ["", "   ", "$$!@#"])
+def test_add_user_invalid(client, invalid_name):
+    """Test that invalid usernames are rejected by the form validation."""
+    response = client.post("/add_user", data={"name": invalid_name}, follow_redirects=True)
+    assert response.status_code == 200
+    assert b"Please enter a valid username" in response.data
 
 
 def test_delete_user_valid(client):
