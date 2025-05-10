@@ -648,4 +648,23 @@ def test_delete_review_valid(client):
 
 
 def test_delete_review_invalid(client):
-    pass
+    """Test that deleting a non-existent review is handled gracefully."""
+    username = f"ReviewGhost_{uuid.uuid4().hex[:6]}"
+
+    # Create user
+    client.post("/add_user", data={"name": username}, follow_redirects=True)
+
+    # Get user ID
+    response = client.get("/users")
+    soup = BeautifulSoup(response.data, "html.parser")
+    user_row = next((r for r in soup.find_all("tr") if username in r.text), None)
+    user_id = user_row.find("a", href=True)["href"].split("/")[-1]
+
+    # Attempt to delete a review that doesn't exist
+    response = client.post(f"/users/{user_id}/delete_review/9999", follow_redirects=True)
+
+    assert response.status_code == 200
+    soup = BeautifulSoup(response.data, "html.parser")
+    alert = soup.find("div", class_="alert")
+    assert alert is not None
+    assert "not found" in alert.text.lower() or "could not" in alert.text.lower()
