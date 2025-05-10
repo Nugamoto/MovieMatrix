@@ -352,7 +352,44 @@ def test_user_reviews_page(client):
 
 
 def test_movie_reviews_page(client):
-    pass
+    """Test that the reviews for a movie are shown correctly on the movie reviews page."""
+    username = f"MovieReviewUser_{uuid.uuid4().hex[:6]}"
+    movie_title = "Inception"
+    review_text = "Mind-blowing film."
+
+    # Create user
+    client.post("/add_user", data={"name": username}, follow_redirects=True)
+
+    # Get user ID
+    response = client.get("/users")
+    soup = BeautifulSoup(response.data, "html.parser")
+    user_row = next((r for r in soup.find_all("tr") if username in r.text), None)
+    user_id = user_row.find("a", href=True)["href"].split("/")[-1]
+
+    # Add movie
+    client.post(
+        f"/users/{user_id}/add_movie",
+        data={"title": movie_title, "director": "Nolan", "year": "2010", "rating": "8.8"},
+        follow_redirects=True
+    )
+
+    # Extract movie ID
+    response = client.get(f"/users/{user_id}")
+    soup = BeautifulSoup(response.data, "html.parser")
+    movie_row = next((r for r in soup.find_all("tr") if movie_title in r.text), None)
+    movie_id = movie_row.find("a", {"href": lambda x: x and "/reviews" in x})["href"].split("/")[-2]
+
+    # Add review
+    client.post(
+        f"/users/{user_id}/movies/{movie_id}/add_review",
+        data={"text": review_text, "user_rating": "9.0"},
+        follow_redirects=True
+    )
+
+    # Load movie reviews page
+    response = client.get(f"/movies/{movie_id}/reviews?user_id={user_id}")
+    assert response.status_code == 200
+    assert bytes(review_text, "utf-8") in response.data
 
 
 def test_add_review_valid(client):
