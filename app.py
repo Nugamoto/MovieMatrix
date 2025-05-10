@@ -239,6 +239,11 @@ def add_review(user_id, movie_id):
         text = request.form.get("text", "").strip()
         rating = request.form.get("user_rating", "").strip()
 
+        if not text:
+            flash("Review text cannot be empty.")
+            logger.warning("Review text missing in add_review for user_id=%d", user_id)
+            return redirect(request.url)
+
         if not is_valid_rating(rating):
             flash("Invalid rating. Please enter a value between 0.0 and 10.0.")
             logger.warning("Invalid rating input in add_review: '%s'", rating)
