@@ -14,6 +14,7 @@ from helpers import (
     is_valid_rating,
     is_valid_year,
     normalize_rating,
+    is_valid_movie_data
 )
 
 app = Flask(__name__)
@@ -122,7 +123,7 @@ def add_movie(user_id):
             return redirect(request.url)
 
         if rating and not is_valid_rating(rating):
-            flash(f"'{rating}' is not a valid rating.")
+            flash(f"'{rating}' is not a valid rating. Please enter a value between 0.0 and 10.0.")
             logger.warning("Invalid rating input: '%s'", rating)
             return redirect(request.url)
 
@@ -132,6 +133,11 @@ def add_movie(user_id):
             "year": year,
             "rating": normalize_rating(rating) if rating else None,
         }
+
+        if not is_valid_movie_data(movie_data):
+            flash("Title is required.")
+            logger.warning("Add movie failed: empty title")
+            return redirect(request.url)
 
         data_manager.add_movie(user_id, movie_data)
         logger.info("Movie added for user %d: '%s'", user_id, title)

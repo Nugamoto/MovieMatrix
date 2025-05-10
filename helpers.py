@@ -36,5 +36,10 @@ def is_valid_rating(rating: str) -> bool:
         return False
 
 
+def is_valid_movie_data(data: dict) -> bool:
+    """Return True if movie data contains a non-empty title."""
+    return bool(data.get("title", "").strip())
+
+
 def normalize_rating(rating: str) -> float:
     return round(float(rating), 1)
