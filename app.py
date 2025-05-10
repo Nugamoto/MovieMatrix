@@ -1,3 +1,4 @@
+import logging
 import os
 
 from dotenv import load_dotenv
@@ -10,6 +11,7 @@ from helpers import is_valid_username, get_user_by_id, get_movie_by_id, get_revi
     is_valid_rating, normalize_rating
 
 load_dotenv()
+logging.basicConfig(level=logging.INFO)
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
@@ -276,6 +278,19 @@ def page_not_found(e):
 
 @app.errorhandler(500)
 def internal_server_error(e):
+    return render_template("500.html"), 500
+
+
+@app.errorhandler(SQLAlchemyError)
+def handle_sqlalchemy_error(e):
+    logging.error(f"Database error: {str(e)}")
+    flash("A database error occurred. Please try again later.")
+    return redirect(url_for("list_users"))
+
+
+@app.errorhandler(Exception)
+def handle_unexpected_error(e):
+    logging.exception("An unexpected error occurred:")
     return render_template("500.html"), 500
 
 
