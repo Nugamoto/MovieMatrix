@@ -145,7 +145,7 @@ def update_movie(user_id, movie_id):
         flash(f"Movie '{title}' was updated successfully.")
         return redirect(url_for("user_movies", user_id=user_id))  # ← hier muss es stehen
 
-    return render_template("update_movie.html", user=user, movie=movie)
+    return render_template("edit_movie.html", user=user, movie=movie)
 
 
 @app.route('/users/<int:user_id>/delete_movie/<int:movie_id>', methods=["POST"])
