@@ -285,6 +285,11 @@ def edit_review(user_id, review_id):
         text = request.form.get("text", "").strip()
         rating = request.form.get("user_rating", "").strip()
 
+        if not text:
+            flash("Review text cannot be empty.")
+            logger.warning("Empty review text during edit_review for ID %d", review_id)
+            return redirect(request.url)
+
         if not is_valid_rating(rating):
             flash("Invalid rating. Please enter a number between 0.0 and 10.0.")
             logger.warning("Invalid rating input in edit_review: '%s'", rating)
