@@ -1,19 +1,8 @@
-import pytest
-
-from app import app
-
 # --- Constants used in response content checks ---
 APP_TITLE = b"MovieMatrix"
 USERS_HEADING = b"Users"
 ADD_USER_BUTTON = b"Add User"
 MOVIE_TABLE_HEADER = b"Title"
-
-
-@pytest.fixture
-def client():
-    app.config["TESTING"] = True
-    with app.test_client() as client:
-        yield client
 
 
 def test_home_page(client):
