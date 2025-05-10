@@ -312,7 +312,43 @@ def test_delete_movie_invalid(client):
 
 
 def test_user_reviews_page(client):
-    pass
+    """Test that the user's reviews page loads successfully and includes added review."""
+    username = f"ReviewUser_{uuid.uuid4().hex[:6]}"
+    movie_title = "The Matrix"
+
+    # Create user
+    client.post("/add_user", data={"name": username}, follow_redirects=True)
+
+    # Get user ID
+    response = client.get("/users")
+    soup = BeautifulSoup(response.data, "html.parser")
+    user_row = next((r for r in soup.find_all("tr") if username in r.text), None)
+    user_id = user_row.find("a", href=True)["href"].split("/")[-1]
+
+    # Add a movie
+    client.post(
+        f"/users/{user_id}/add_movie",
+        data={"title": movie_title, "director": "Wachowski", "year": "1999", "rating": "9.0"},
+        follow_redirects=True
+    )
+
+    # Extract movie ID
+    response = client.get(f"/users/{user_id}")
+    soup = BeautifulSoup(response.data, "html.parser")
+    movie_row = next((r for r in soup.find_all("tr") if movie_title in r.text), None)
+    movie_id = movie_row.find("a", {"href": lambda x: x and "/reviews" in x})["href"].split("/")[-2]
+
+    # Add review (corrected route!)
+    client.post(
+        f"/users/{user_id}/movies/{movie_id}/add_review",
+        data={"text": "Amazing movie!", "user_rating": "9.0"},
+        follow_redirects=True
+    )
+
+    # Request user's reviews page
+    response = client.get(f"/users/{user_id}/reviews")
+    assert response.status_code == 200
+    assert b"Amazing movie!" in response.data
 
 
 def test_movie_reviews_page(client):
