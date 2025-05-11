@@ -11,10 +11,12 @@ class User(Base):
     username = Column(String, unique=True, nullable=False)
     email = Column(String, unique=True, nullable=False)
     first_name = Column(String, nullable=False)
-    last_name = Column(String)  # nullable=True ist Standard
+    last_name = Column(String)
     age = Column(Integer)
+    password_hash = Column(String, nullable=False)
 
     reviews = relationship("Review", back_populates="user", cascade="all, delete")
+    user_movies = relationship("UserMovie", back_populates="user", cascade="all, delete")
 
     def __repr__(self):
         return f"<User(id={self.id}, username='{self.username}', email='{self.email}')>"
