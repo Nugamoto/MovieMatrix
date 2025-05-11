@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Text, UniqueConstraint
 from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
@@ -8,13 +8,16 @@ class User(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
+    username = Column(String, unique=True, nullable=False)
+    email = Column(String, unique=True, nullable=False)
+    first_name = Column(String, nullable=False)
+    last_name = Column(String)  # nullable=True ist Standard
+    age = Column(Integer)
 
-    movies = relationship("Movie", back_populates="user", cascade="all, delete")
     reviews = relationship("Review", back_populates="user", cascade="all, delete")
 
     def __repr__(self):
-        return f"<User(id={self.id}, name='{self.name}')>"
+        return f"<User(id={self.id}, username='{self.username}', email='{self.email}')>"
 
 
 class Movie(Base):
@@ -24,15 +27,16 @@ class Movie(Base):
     title = Column(String, nullable=False)
     director = Column(String)
     year = Column(Integer)
-    rating = Column(Float)
-
-    user_id = Column(Integer, ForeignKey('users.id'))
-    user = relationship("User", back_populates="movies")
+    genre = Column(String)
+    poster_url = Column(String)
+    imdb_rating = Column(Float)
 
     reviews = relationship("Review", back_populates="movie", cascade="all, delete")
 
+    __table_args__ = (UniqueConstraint('title', 'year', name='uix_title_year'),)
+
     def __repr__(self):
-        return f"<Movie(id={self.id}, title='{self.title}', user_id={self.user_id})>"
+        return f"<Movie(id={self.id}, title='{self.title}', year={self.year})>"
 
 
 class Review(Base):
