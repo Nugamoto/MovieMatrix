@@ -43,3 +43,8 @@ def cleanup_test_db():
         os.remove(TEST_DB_PATH)
     except FileNotFoundError:
         pass
+
+
+@pytest.fixture(autouse=True, scope="session")
+def set_test_env_key():
+    os.environ.setdefault("OMDB_API_KEY", "test_dummy_key")
