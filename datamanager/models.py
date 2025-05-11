@@ -45,7 +45,7 @@ class Review(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     movie_id = Column(Integer, ForeignKey('movies.id'), nullable=False)
-
+    title = Column(String, nullable=False)
     text = Column(Text)
     user_rating = Column(Float)
 
@@ -53,7 +53,10 @@ class Review(Base):
     movie = relationship("Movie", back_populates="reviews")
 
     def __repr__(self):
-        return f"<Review(user_id={self.user_id}, movie_id={self.movie_id}, rating={self.user_rating})>"
+        return (
+            f"<Review(user_id={self.user_id}, movie_id={self.movie_id}, "
+            f"title='{self.title}', rating={self.user_rating})>"
+        )
 
 
 class UserMovie(Base):
