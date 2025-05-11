@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Float, ForeignKey, Text, UniqueConstraint
+from sqlalchemy import Column, Integer, String, Float, ForeignKey, Text, UniqueConstraint, Boolean
 from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
@@ -34,6 +34,7 @@ class Movie(Base):
     imdb_rating = Column(Float)
 
     reviews = relationship("Review", back_populates="movie", cascade="all, delete")
+    user_movies = relationship("UserMovie", back_populates="movie", cascade="all, delete")
 
     __table_args__ = (UniqueConstraint('title', 'year', name='uix_title_year'),)
 
@@ -67,9 +68,9 @@ class UserMovie(Base):
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
     movie_id = Column(Integer, ForeignKey('movies.id'), nullable=False)
-    is_watched = Column(Integer, default=0)
-    is_planned = Column(Integer, default=0)
-    is_favorite = Column(Integer, default=0)
+    is_watched = Column(Boolean, default=False)
+    is_planned = Column(Boolean, default=False)
+    is_favorite = Column(Boolean, default=False)
 
     user = relationship("User", back_populates="user_movies")
     movie = relationship("Movie", back_populates="user_movies")
@@ -81,7 +82,3 @@ class UserMovie(Base):
             f"<UserMovie(user_id={self.user_id}, movie_id={self.movie_id}, "
             f"watched={self.is_watched}, planned={self.is_planned}, favorite={self.is_favorite})>"
         )
-
-
-User.user_movies = relationship("UserMovie", back_populates="user", cascade="all, delete")
-Movie.user_movies = relationship("UserMovie", back_populates="movie", cascade="all, delete")
