@@ -54,3 +54,29 @@ class Review(Base):
 
     def __repr__(self):
         return f"<Review(user_id={self.user_id}, movie_id={self.movie_id}, rating={self.user_rating})>"
+
+
+class UserMovie(Base):
+    __tablename__ = 'user_movies'
+
+    id = Column(Integer, primary_key=True)
+    user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
+    movie_id = Column(Integer, ForeignKey('movies.id'), nullable=False)
+    is_watched = Column(Integer, default=0)
+    is_planned = Column(Integer, default=0)
+    is_favorite = Column(Integer, default=0)
+
+    user = relationship("User", back_populates="user_movies")
+    movie = relationship("Movie", back_populates="user_movies")
+
+    __table_args__ = (UniqueConstraint('user_id', 'movie_id', name='uix_user_movie'),)
+
+    def __repr__(self):
+        return (
+            f"<UserMovie(user_id={self.user_id}, movie_id={self.movie_id}, "
+            f"watched={self.is_watched}, planned={self.is_planned}, favorite={self.is_favorite})>"
+        )
+
+
+User.user_movies = relationship("UserMovie", back_populates="user", cascade="all, delete")
+Movie.user_movies = relationship("UserMovie", back_populates="movie", cascade="all, delete")
