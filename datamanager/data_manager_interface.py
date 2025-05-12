@@ -22,8 +22,8 @@ class DataManagerInterface(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def update_user(self, user_id: int, new_name: str):
-        """Rename a user and return the updated object or None."""
+    def update_user(self, user_id: int, updated_data: dict):
+        """Update arbitrary user fields and return the updated object or None."""
         raise NotImplementedError
 
     @abstractmethod
