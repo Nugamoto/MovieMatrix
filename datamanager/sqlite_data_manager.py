@@ -4,12 +4,20 @@ from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker, joinedload
 
 from datamanager.data_manager_interface import DataManagerInterface
-from datamanager.models import User, Movie, Review
+from datamanager.models import User, Movie, Review, UserMovie
 
 logger = logging.getLogger(__name__)
 
 
 class SQLiteDataManager(DataManagerInterface):
+    """
+    Concrete implementation of DataManagerInterface using SQLite + SQLAlchemy.
+
+    Provides CRUD operations for users, movies, reviews and the user_movies link
+    table.  Each method opens a short-lived session via context manager to keep
+    transactions explicit and connections short-lived.
+    """
+
     def __init__(self, db_url: str):
         self.engine = create_engine(db_url)
         self.Session = sessionmaker(bind=self.engine)
@@ -38,20 +46,23 @@ class SQLiteDataManager(DataManagerInterface):
             result = session.execute(select(Movie))
             return result.scalars().all()
 
-    def get_user_movies(self, user_id: int):
-        """Return all movies that belong to a specific user.
+    def get_movies_by_user(self, user_id: int):
+        """
+        Return all movies that are linked to a user via the user_movies table.
 
         Args:
-            user_id (int): The ID of the user.
+            user_id (int): ID of the user.
 
         Returns:
-            list[Movie]: List of movies owned by the user.
+            list[Movie]: All movies associated with the user.
         """
         with self.Session() as session:
-            result = session.execute(
-                select(Movie).where(Movie.user_id == user_id)
+            stmt = (
+                select(Movie)
+                .join(UserMovie, Movie.id == UserMovie.movie_id)
+                .where(UserMovie.user_id == user_id)
             )
-            return result.scalars().all()
+            return session.execute(stmt).scalars().all()
 
     def add_user(self, name: str):
         """Add a new user to the database.
@@ -112,15 +123,27 @@ class SQLiteDataManager(DataManagerInterface):
             session.commit()
             return True
 
-    def add_movie(self, user_id: int, movie_data: dict):
-        """Add a movie to a user's movie list.
+    def add_movie(
+            self,
+            user_id: int,
+            movie_data: dict,
+            planned: bool = True,
+            watched: bool = False,
+            favorite: bool = False,
+    ):
+        """
+        Insert a movie if it does not yet exist and (re)link it to the user.
 
         Args:
             user_id (int): ID of the user.
-            movie_data (dict): Movie data (title, director, year, rating).
+            movie_data (dict): Data returned by ``fetch_movie``.
+            planned (bool): Flag for 'watchlist'.
+            watched (bool): Flag for 'watched'.
+            favorite (bool): Flag for 'favorite'.
 
         Returns:
-            Movie | None: The created movie object, or None if user not found.
+            Movie | None: The (existing or newly created) movie object,
+                          or None if the user is not found.
         """
         with self.Session() as session:
             user = session.get(User, user_id)
@@ -128,23 +151,46 @@ class SQLiteDataManager(DataManagerInterface):
                 logger.warning("Add movie failed: User ID %d not found.", user_id)
                 return None
 
-            movie = Movie(
-                title=movie_data.get("title"),
-                director=movie_data.get("director"),
-                year=movie_data.get("year"),
-                rating=movie_data.get("rating"),
-                user_id=user_id
+            stmt = select(Movie).where(
+                Movie.title == movie_data["title"],
+                Movie.year == movie_data["year"],
             )
+            movie = session.execute(stmt).scalar_one_or_none()
 
-            session.add(movie)
-            try:
-                session.commit()
-                session.refresh(movie)
-                return movie
-            except Exception as e:
-                logger.error("Failed to add movie for user %d: %s", user_id, e)
-                session.rollback()
-                raise
+            if movie is None:
+                movie = Movie(
+                    title=movie_data["title"],
+                    director=movie_data.get("director"),
+                    year=movie_data.get("year"),
+                    genre=movie_data.get("genre"),
+                    poster_url=movie_data.get("poster_url"),
+                    imdb_rating=movie_data.get("imdb_rating"),
+                )
+                session.add(movie)
+                session.flush()
+
+            link = (
+                session.query(UserMovie)
+                .filter_by(user_id=user_id, movie_id=movie.id)
+                .one_or_none()
+            )
+            if link is None:
+                link = UserMovie(
+                    user_id=user_id,
+                    movie_id=movie.id,
+                    is_planned=planned,
+                    is_watched=watched,
+                    is_favorite=favorite,
+                )
+                session.add(link)
+            else:
+                link.is_planned = planned or link.is_planned
+                link.is_watched = watched or link.is_watched
+                link.is_favorite = favorite or link.is_favorite
+
+            session.commit()
+            session.refresh(movie)
+            return movie
 
     def update_movie(self, movie_id: int, updated_data: dict):
         """Update a movie's details.
