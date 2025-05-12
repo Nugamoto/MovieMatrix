@@ -3,24 +3,42 @@
 {% block title %}Edit Review - MovieMatrix{% endblock %}
 
 {% block content %}
-<h1>Edit Review for "{{ movie.title }}"</h1>
+<h1>Edit Review for “{{ movie.title }}”</h1>
 
 <form method="POST" class="mt-4">
     <div class="mb-3">
-        <label for="text" class="form-label">Your Review</label>
-        <textarea class="form-control" id="text" name="text" rows="4" required>{{ review.text }}</textarea>
-    </div>
-    <div class="mb-3">
-        <label for="user_rating" class="form-label">Rating (0.0 – 10.0)</label>
-        <input type="text" class="form-control" id="user_rating" name="user_rating" value="{{ review.user_rating }}"
+        <label for="title" class="form-label">Review Title</label>
+        <input type="text"
+               class="form-control"
+               id="title"
+               name="title"
+               value="{{ review.title }}"
                required>
     </div>
+
+    <div class="mb-3">
+        <label for="text" class="form-label">Your Review</label>
+        <textarea class="form-control"
+                  id="text"
+                  name="text"
+                  rows="4"
+                  required>{{ review.text }}</textarea>
+    </div>
+
+    <div class="mb-3">
+        <label for="user_rating" class="form-label">Rating (0.0 – 10.0)</label>
+        <input type="text"
+               class="form-control"
+               id="user_rating"
+               name="user_rating"
+               value="{{ review.user_rating }}"
+               required>
+    </div>
+
     <div class="mt-4 d-flex gap-2">
         <button type="submit" class="btn btn-success">Update Review</button>
         <a href="{{ request.args.get('next') or url_for('user_reviews', user_id=user.id) }}"
-           class="btn btn-outline-secondary">
-            Cancel
-        </a>
+           class="btn btn-outline-secondary">Cancel</a>
     </div>
 </form>
 {% endblock %}
