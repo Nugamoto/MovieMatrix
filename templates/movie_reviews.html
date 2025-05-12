@@ -4,9 +4,16 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="mb-0">Reviews for “{{ movie.title }}”</h1>
-    <a href="{{ url_for('list_users') }}" class="btn btn-outline-secondary">
-        Back to Users
-    </a>
+
+    <div class="d-flex gap-2">
+        {% if user_id %}
+        <a href="{{ url_for('add_review', user_id=user_id, movie_id=movie.id) }}"
+           class="btn btn-success">Add Review</a>
+        {% endif %}
+        <a href="{{ url_for('list_users') }}" class="btn btn-outline-secondary">
+            Back to Users
+        </a>
+    </div>
 </div>
 
 {% if reviews %}

@@ -256,16 +256,23 @@ def user_reviews(user_id):
 
 
 @app.route("/movies/<int:movie_id>/reviews")
-def movie_reviews(movie_id):
-    movies = data_manager.get_all_movies()
-    movie = get_movie_by_id(movies, movie_id)
+def movie_reviews(movie_id: int):
+    movie = get_movie_by_id(data_manager.get_all_movies(), movie_id)
     if not movie:
         flash(f"Movie with ID {movie_id} not found.")
         logger.warning("Movie ID %d not found when accessing reviews", movie_id)
         return redirect(url_for("list_users"))
 
     reviews = data_manager.get_reviews_for_movie(movie_id)
-    return render_template("movie_reviews.html", movie=movie, reviews=reviews)
+
+    user_id = request.args.get("user_id", type=int)
+
+    return render_template(
+        "movie_reviews.html",
+        movie=movie,
+        reviews=reviews,
+        user_id=user_id,
+    )
 
 
 @app.route("/users/<int:user_id>/movies/<int:movie_id>/add_review", methods=["GET", "POST"])
