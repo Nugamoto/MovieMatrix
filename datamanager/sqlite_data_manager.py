@@ -230,29 +230,37 @@ class SQLiteDataManager(DataManagerInterface):
             session.refresh(movie)
             return movie
 
-    def update_movie(self, movie_id: int, updated_data: dict):
-        """Update a movie's details.
+    def update_movie(self, movie_id: int, updated_data: dict) -> Movie | None:
+        """
+        Update selected movie columns (title, director, year, genre, poster_url, imdb_rating).
 
         Args:
-            movie_id (int): The movie's ID.
-            updated_data (dict): Fields to update.
+            movie_id (int): ID of the movie row.
+            updated_data (dict): Field names + new values.
 
         Returns:
-            Movie | None: The updated movie, or None if not found.
+            Movie | None: The updated movie object or None if not found.
         """
+        allowed = {
+            "title",
+            "director",
+            "year",
+            "genre",
+            "poster_url",
+            "imdb_rating",
+        }
+
         with self.Session() as session:
             movie = session.get(Movie, movie_id)
             if not movie:
                 logger.warning("Update failed: Movie ID %d not found.", movie_id)
                 return None
 
-            movie.title = updated_data.get("title", movie.title)
-            movie.director = updated_data.get("director", movie.director)
-            movie.year = updated_data.get("year", movie.year)
-            movie.rating = updated_data.get("rating", movie.rating)
+            for key, val in updated_data.items():  # ➊
+                if key in allowed:  # ➋
+                    setattr(movie, key, val)
 
-            session.commit()
-            session.refresh(movie)
+            session.commit()  # ➌
             return movie
 
     def delete_movie(self, movie_id: int):
