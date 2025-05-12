@@ -2,6 +2,7 @@ import logging
 
 from sqlalchemy import create_engine, select
 from sqlalchemy.orm import sessionmaker, joinedload
+from werkzeug.security import generate_password_hash
 
 from datamanager.data_manager_interface import DataManagerInterface
 from datamanager.models import User, Movie, Review, UserMovie
@@ -64,26 +65,50 @@ class SQLiteDataManager(DataManagerInterface):
             )
             return session.execute(stmt).scalars().all()
 
-    def add_user(self, name: str):
-        """Add a new user to the database.
+    def add_user(
+            self,
+            username: str,
+            email: str,
+            first_name: str,
+            password_hash: str | None = None,
+            last_name: str | None = None,
+            age: int | None = None,
+    ) -> User | None:
+        """
+        Create a user with all mandatory fields.
 
         Args:
-            name (str): Name of the user.
+            username (str): Unique username.
+            email (str): Unique e-mail address.
+            first_name (str): First name (required).
+            password_hash (str | None): Already-hashed password; if None,
+                                        a hash for 'changeme' is generated.
+            last_name (str | None): Optional last name.
+            age (int | None): Optional age.
 
         Returns:
-            User: The created user object.
+            User | None: The created user or None on uniqueness violation.
         """
+        if password_hash is None:
+            password_hash = generate_password_hash("changeme")
+
         with self.Session() as session:
-            user = User(name=name)
-            session.add(user)
             try:
+                user = User(
+                    username=username,
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name,
+                    age=age,
+                    password_hash=password_hash,
+                )
+                session.add(user)
                 session.commit()
-                session.refresh(user)
                 return user
-            except Exception as e:
-                logger.error("Failed to add user '%s': %s", name, e)
+            except Exception as exc:
+                logger.exception("Failed to add user '%s': %s", username, exc)
                 session.rollback()
-                raise
+                return None
 
     def update_user(self, user_id: int, updated_data: dict) -> User | None:
         """
