@@ -20,7 +20,7 @@ class SQLiteDataManager(DataManagerInterface):
 
     def __init__(self, db_url: str):
         self.engine = create_engine(db_url)
-        self.Session = sessionmaker(bind=self.engine)
+        self.Session = sessionmaker(bind=self.engine, expire_on_commit=False)
 
     def get_all_users(self):
         """Return all users from the database.
