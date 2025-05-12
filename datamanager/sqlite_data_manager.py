@@ -281,13 +281,14 @@ class SQLiteDataManager(DataManagerInterface):
             session.commit()
             return True
 
-    def add_review(self, user_id: int, movie_id: int, review_data: dict):
-        """Add a review for a movie by a user.
+    def add_review(self, user_id: int, movie_id: int, review_data: dict) -> Review | None:
+        """
+        Add a review for a movie by a user.
 
         Args:
             user_id (int): ID of the user.
             movie_id (int): ID of the movie.
-            review_data (dict): Review text and user rating.
+            review_data (dict): Must contain keys 'title', 'text', 'user_rating'.
 
         Returns:
             Review | None: The created review or None if user/movie not found.
@@ -295,7 +296,6 @@ class SQLiteDataManager(DataManagerInterface):
         with self.Session() as session:
             user = session.get(User, user_id)
             movie = session.get(Movie, movie_id)
-
             if not user or not movie:
                 logger.warning(
                     "Add review failed: user_id=%d or movie_id=%d not found.",
@@ -306,22 +306,13 @@ class SQLiteDataManager(DataManagerInterface):
             review = Review(
                 user_id=user_id,
                 movie_id=movie_id,
+                title=review_data.get("title"),
                 text=review_data.get("text"),
-                user_rating=review_data.get("user_rating")
+                user_rating=review_data.get("user_rating"),
             )
-
             session.add(review)
-            try:
-                session.commit()
-                session.refresh(review)
-                return review
-            except Exception as e:
-                logger.error(
-                    "Failed to add review: user_id=%d, movie_id=%d, error=%s",
-                    user_id, movie_id, e
-                )
-                session.rollback()
-                raise
+            session.commit()
+            return review
 
     def get_reviews_for_movie(self, movie_id: int):
         """Return all reviews for a given movie, including user data.
@@ -351,27 +342,30 @@ class SQLiteDataManager(DataManagerInterface):
             result = session.execute(stmt)
             return result.scalars().all()
 
-    def update_review(self, review_id: int, updated_data: dict):
-        """Update the content or rating of a review.
+    def update_review(self, review_id: int, updated_data: dict) -> Review | None:
+        """
+        Update title, text or rating of a review.
 
         Args:
             review_id (int): The review's ID.
-            updated_data (dict): Updated fields.
+            updated_data (dict): Keys 'title', 'text', 'user_rating' as needed.
 
         Returns:
             Review | None: Updated review or None if not found.
         """
+        allowed = {"title", "text", "user_rating"}
+
         with self.Session() as session:
             review = session.get(Review, review_id)
             if not review:
                 logger.warning("Update failed: Review ID %d not found.", review_id)
                 return None
 
-            review.text = updated_data.get("text", review.text)
-            review.user_rating = updated_data.get("user_rating", review.user_rating)
+            for key, val in updated_data.items():
+                if key in allowed:
+                    setattr(review, key, val)
 
             session.commit()
-            session.refresh(review)
             return review
 
     def delete_review(self, review_id: int):
