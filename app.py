@@ -292,12 +292,21 @@ def movie_reviews(movie_id: int):
     """List reviews for a movie; optional user_id enables 'Add Review' button."""
     movie = get_movie_by_id(data_manager.get_all_movies(), movie_id)
     if not movie:
-        flash("Movie not found.", "danger")
+        flash(f"Movie with ID {movie_id} not found.")
+        logger.warning("Movie ID %d not found when accessing reviews", movie_id)
         return redirect(url_for("list_users"))
 
     reviews = data_manager.get_reviews_for_movie(movie_id)
     user_id = request.args.get("user_id", type=int)
-    return render_template("movie_reviews.html", movie=movie, reviews=reviews, user_id=user_id)
+    next_url = request.args.get("next") or url_for("list_users")
+
+    return render_template(
+        "movie_reviews.html",
+        movie=movie,
+        reviews=reviews,
+        user_id=user_id,
+        next_url=next_url,
+    )
 
 
 @app.route("/users/<int:user_id>/movies/<int:movie_id>/add_review", methods=["GET", "POST"])
