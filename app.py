@@ -279,6 +279,7 @@ def add_review(user_id, movie_id):
         return redirect(url_for("list_users"))
 
     if request.method == "POST":
+        title = request.form.get("title", "").strip()
         text = request.form.get("text", "").strip()
         rating = request.form.get("user_rating", "").strip()
 
@@ -293,6 +294,7 @@ def add_review(user_id, movie_id):
             return redirect(request.url)
 
         review_data = {
+            "title": title,
             "text": text,
             "user_rating": normalize_rating(rating),
         }
