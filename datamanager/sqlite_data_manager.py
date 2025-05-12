@@ -85,24 +85,37 @@ class SQLiteDataManager(DataManagerInterface):
                 session.rollback()
                 raise
 
-    def update_user(self, user_id: int, new_name: str):
-        """Update the name of a user by their ID.
+    def update_user(self, user_id: int, updated_data: dict) -> User | None:
+        """
+        Update arbitrary user fields (e.g. email, password_hash).
 
         Args:
-            user_id (int): The user's ID.
-            new_name (str): The new name.
+            user_id (int): ID of the user.
+            updated_data (dict): Keys matching User columns.
 
         Returns:
-            User | None: The updated user object or None if not found.
+            User | None: The updated user object, or None if not found.
         """
+        allowed = {
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "age",
+            "password_hash",
+        }
+
         with self.Session() as session:
             user = session.get(User, user_id)
             if not user:
                 logger.warning("Update failed: User ID %d not found.", user_id)
                 return None
-            user.name = new_name
+
+            for key, value in updated_data.items():
+                if key in allowed:
+                    setattr(user, key, value)
+
             session.commit()
-            session.refresh(user)
             return user
 
     def delete_user(self, user_id: int):
