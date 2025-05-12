@@ -188,46 +188,42 @@ def add_movie(user_id):
 
 
 @app.route("/users/<int:user_id>/update_movie/<int:movie_id>", methods=["GET", "POST"])
-def update_movie(user_id, movie_id):
+def update_movie(user_id: int, movie_id: int):
     user = get_user_by_id(data_manager.get_all_users(), user_id)
     if not user:
         flash(f"User with ID {user_id} not found.")
-        logger.warning("Update movie failed: user ID %d not found", user_id)
         return redirect(url_for("list_users"))
 
-    movies = data_manager.get_movies_by_user(user_id)
-    movie = get_movie_by_id(movies, movie_id)
+    movie = get_movie_by_id(data_manager.get_movies_by_user(user_id), movie_id)
     if not movie:
         flash(f"Movie with ID {movie_id} not found.")
-        logger.warning("Movie ID %d not found for user ID %d", movie_id, user_id)
         return redirect(url_for("user_movies", user_id=user_id))
 
     if request.method == "POST":
         title = request.form.get("title", "").strip()
         director = request.form.get("director", "").strip()
         year = request.form.get("year", "").strip()
-        rating = request.form.get("rating", "").strip()
+        genre = request.form.get("genre", "").strip()
+        imdb_rating = request.form.get("imdb_rating", "").strip()
 
         if year and not is_valid_year(year):
             flash(f"'{year}' is not a valid year.")
-            logger.warning("Invalid year during update: '%s'", year)
             return redirect(request.url)
 
-        if rating and not is_valid_rating(rating):
-            flash(f"'{rating}' is not a valid rating.")
-            logger.warning("Invalid rating during update: '%s'", rating)
+        if imdb_rating and not is_valid_rating(imdb_rating):
+            flash("IMDb rating must be between 0.0 and 10.0.")
             return redirect(request.url)
 
         updated_data = {
-            "title": title,
-            "director": director,
-            "year": year,
-            "rating": normalize_rating(rating) if rating else None,
+            "title": title or movie.title,
+            "director": director or movie.director,
+            "year": year or movie.year,
+            "genre": genre or movie.genre,
+            "imdb_rating": normalize_rating(imdb_rating) if imdb_rating else movie.imdb_rating,
         }
 
         data_manager.update_movie(movie_id, updated_data)
-        logger.info("Movie updated: ID %d by user %d", movie_id, user_id)
-        flash(f"Movie '{title}' was updated.")
+        flash(f"Movie '{updated_data['title']}' was updated.")
         return redirect(url_for("user_movies", user_id=user_id))
 
     return render_template("edit_movie.html", user=user, movie=movie)
