@@ -103,7 +103,7 @@ def user_movies(user_id):
         logger.warning("User ID %d not found when accessing movies", user_id)
         return redirect(url_for("list_users"))
 
-    movies = data_manager.get_user_movies(user_id)
+    movies = data_manager.get_movies_by_user(user_id)
     return render_template("user_movies.html", user=user, movies=movies)
 
 
@@ -147,7 +147,7 @@ def update_movie(user_id, movie_id):
         logger.warning("Update movie failed: user ID %d not found", user_id)
         return redirect(url_for("list_users"))
 
-    movies = data_manager.get_user_movies(user_id)
+    movies = data_manager.get_movies_by_user(user_id)
     movie = get_movie_by_id(movies, movie_id)
     if not movie:
         flash(f"Movie with ID {movie_id} not found.")
@@ -187,7 +187,7 @@ def update_movie(user_id, movie_id):
 
 @app.route("/users/<int:user_id>/delete_movie/<int:movie_id>", methods=["POST"])
 def delete_movie(user_id, movie_id):
-    movie = get_movie_by_id(data_manager.get_user_movies(user_id), movie_id)
+    movie = get_movie_by_id(data_manager.get_movies_by_user(user_id), movie_id)
     if not movie:
         flash(f"Movie with ID {movie_id} not found.")
         logger.warning("Delete failed: movie ID %d not found", movie_id)
@@ -276,7 +276,7 @@ def edit_review(user_id, review_id):
         logger.warning("Edit failed: review ID %d not found", review_id)
         return redirect(url_for("user_reviews", user_id=user_id))
 
-    movies = data_manager.get_user_movies(user_id)
+    movies = data_manager.get_movies_by_user(user_id)
     movie = get_movie_by_id(movies, review.movie_id)
 
     next_url = request.args.get("next")
@@ -351,4 +351,3 @@ def handle_unexpected_error(e):
 
 if __name__ == "__main__":
     app.run(debug=True)
-
