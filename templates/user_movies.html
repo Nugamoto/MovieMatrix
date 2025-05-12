@@ -39,17 +39,19 @@
         <td>{{ movie.year or '—' }}</td>
         <td>{{ movie.genre or '—' }}</td>
         <td>{{ movie.imdb_rating if movie.imdb_rating is not none else '—' }}</td>
-        <td class="d-flex gap-2 flex-wrap">
-            <a href="{{ url_for('update_movie', user_id=user.id, movie_id=movie.id) }}"
-               class="btn btn-sm btn-outline-secondary">Edit</a>
+        <td>
+            <div class="d-flex gap-2 flex-wrap">
+                <a href="{{ url_for('update_movie', user_id=user.id, movie_id=movie.id) }}"
+                   class="btn btn-sm btn-outline-secondary">Edit</a>
 
-            <form method="POST" class="delete-form d-inline"
-                  action="{{ url_for('delete_movie', user_id=user.id, movie_id=movie.id) }}">
-                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
-            </form>
+                <form method="POST" class="delete-form d-inline"
+                      action="{{ url_for('delete_movie', user_id=user.id, movie_id=movie.id) }}">
+                    <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                </form>
 
-            <a href="{{ url_for('movie_reviews', movie_id=movie.id, user_id=user.id) }}"
-               class="btn btn-sm btn-outline-success">Reviews</a>
+                <a href="{{ url_for('movie_reviews', movie_id=movie.id, user_id=user.id) }}"
+                   class="btn btn-sm btn-outline-success">Reviews</a>
+            </div>
         </td>
     </tr>
     {% endfor %}
