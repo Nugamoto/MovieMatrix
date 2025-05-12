@@ -4,7 +4,7 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="mb-0">{{ user.first_name }}’s Reviews</h1>
-    <a href="{{ request.args.get('next') or url_for('user_movies', user_id=user.id) }}"
+    <a href="{{ next or url_for('user_movies', user_id=user.id) }}"
        class="btn btn-outline-secondary">Back</a>
 </div>
 

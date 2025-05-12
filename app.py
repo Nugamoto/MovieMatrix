@@ -285,7 +285,7 @@ def user_reviews(user_id: int):
         return redirect(url_for("list_users"))
 
     reviews = data_manager.get_reviews_by_user(user_id)
-    next_url = request.args.get("next", request.referrer)
+    next_url = request.args.get("next") or request.referrer or url_for("user_movies", user_id=user_id)
     return render_template("user_reviews.html", user=user, reviews=reviews, next=next_url)
 
 
