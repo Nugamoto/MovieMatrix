@@ -136,7 +136,7 @@ def delete_user(user_id):
 
     data_manager.delete_user(user_id)
     logger.info("User deleted: ID %d", user_id)
-    flash(f"User '{user.name}' was deleted.")
+    flash(f"User '{user.username}' was deleted.")
     return redirect(url_for("list_users"))
 
 
