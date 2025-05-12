@@ -221,8 +221,7 @@ def movie_reviews(movie_id):
         return redirect(url_for("list_users"))
 
     reviews = data_manager.get_reviews_for_movie(movie_id)
-    user_id = movie.user_id
-    return render_template("movie_reviews.html", movie=movie, reviews=reviews, user_id=user_id)
+    return render_template("movie_reviews.html", movie=movie, reviews=reviews)
 
 
 @app.route("/users/<int:user_id>/movies/<int:movie_id>/add_review", methods=["GET", "POST"])
