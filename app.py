@@ -280,11 +280,13 @@ def user_reviews(user_id: int):
     """Display all reviews authored by a user."""
     user = get_user_by_id(data_manager.get_all_users(), user_id)
     if not user:
-        flash("User not found.", "danger")
+        flash(f"User with ID {user_id} not found.")
+        logger.warning("User ID %d not found when accessing reviews", user_id)
         return redirect(url_for("list_users"))
 
     reviews = data_manager.get_reviews_by_user(user_id)
-    return render_template("user_reviews.html", user=user, reviews=reviews)
+    next_url = request.args.get("next", request.referrer)
+    return render_template("user_reviews.html", user=user, reviews=reviews, next=next_url)
 
 
 @app.route("/movies/<int:movie_id>/reviews")
