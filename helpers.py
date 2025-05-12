@@ -1,5 +1,6 @@
 import re
 from datetime import datetime
+from typing import Optional
 
 USERNAME_RE = re.compile(r"^[A-Za-z0-9_]{3,30}$")
 EMAIL_RE = re.compile(r"^[\w\.-]+@[\w\.-]+\.\w{2,}$")
@@ -13,18 +14,55 @@ MAX_RATING = 10.0
 
 
 def is_valid_username(username: str) -> bool:
+    """
+    Validate the username format (3–30 chars, letters/digits/underscores).
+
+    Args:
+        username (str): The username to validate.
+
+    Returns:
+        bool: True if valid, False otherwise.
+    """
     return bool(USERNAME_RE.fullmatch(username))
 
 
 def is_valid_email(email: str) -> bool:
+    """
+    Validate email format using regular expression.
+
+    Args:
+        email (str): Email address to validate.
+
+    Returns:
+        bool: True if valid, False otherwise.
+    """
     return bool(EMAIL_RE.fullmatch(email))
 
 
 def is_valid_name(name: str) -> bool:
+    """
+    Validate first or last name (letters, spaces, hyphens, apostrophes).
+
+    Args:
+        name (str): Name to validate.
+
+    Returns:
+        bool: True if valid, False otherwise.
+    """
     return bool(NAME_RE.fullmatch(name.strip()))
 
 
 def passwords_match(pw1: str, pw2: str) -> bool:
+    """
+    Check whether two passwords match and are non-empty.
+
+    Args:
+        pw1 (str): First password.
+        pw2 (str): Second password.
+
+    Returns:
+        bool: True if they match and are non-empty.
+    """
     return pw1 and pw1 == pw2
 
 
@@ -74,7 +112,7 @@ def normalize_rating(rating: str) -> float:
     return round(float(rating), 1)
 
 
-def get_user_by_id(users: list, user_id: int):
+def get_user_by_id(users: list, user_id: int) -> Optional[object]:
     """
     Retrieve a user object by its ID.
 
@@ -88,7 +126,7 @@ def get_user_by_id(users: list, user_id: int):
     return next((user for user in users if user.id == user_id), None)
 
 
-def get_movie_by_id(movies: list, movie_id: int):
+def get_movie_by_id(movies: list, movie_id: int) -> Optional[object]:
     """
     Retrieve a movie object by its ID.
 
@@ -102,7 +140,7 @@ def get_movie_by_id(movies: list, movie_id: int):
     return next((movie for movie in movies if movie.id == movie_id), None)
 
 
-def get_review_by_id(reviews: list, review_id: int):
+def get_review_by_id(reviews: list, review_id: int) -> Optional[object]:
     """
     Retrieve a review object by its ID.
 
