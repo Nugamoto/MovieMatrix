@@ -1,22 +1,40 @@
 {% extends "base.html" %}
-
 {% block title %}Add Movie - MovieMatrix{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h1>Add Movie</h1>
-    <a href="{{ url_for('user_movies', user_id=user.id) }}" class="btn btn-outline-secondary">Back to Movies</a>
-</div>
+<h1 class="mb-4">Add Movie for {{ user.first_name }}</h1>
 
-<form method="POST" class="mt-4">
-    <div class="mb-3">
-        <label for="title" class="form-label">Movie Title</label>
-        <input type="text" class="form-control" id="title" name="title" required>
+<form method="POST" novalidate>
+    <div class="row g-3">
+        <div class="col-md-8">
+            <label for="title" class="form-label">Title *</label>
+            <input type="text" class="form-control" id="title" name="title" required>
+        </div>
+
+        <div class="col-md-4">
+            <label for="year" class="form-label">Year</label>
+            <input type="number" min="1900" max="2100" class="form-control" id="year" name="year">
+        </div>
     </div>
-    <div class="mb-3">
-        <label for="year" class="form-label">Release Year (optional)</label>
-        <input type="text" class="form-control" id="year" name="year">
-    </div>
+
+    <fieldset class="mt-4">
+        <legend>Status</legend>
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="planned" name="planned" checked>
+            <label class="form-check-label" for="planned">Planned</label>
+        </div>
+
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="watched" name="watched">
+            <label class="form-check-label" for="watched">Watched</label>
+        </div>
+
+        <div class="form-check form-check-inline">
+            <input class="form-check-input" type="checkbox" id="favorite" name="favorite">
+            <label class="form-check-label" for="favorite">Favorite</label>
+        </div>
+    </fieldset>
+
     <div class="mt-4 d-flex gap-2">
         <button type="submit" class="btn btn-success">Add Movie</button>
         <a href="{{ url_for('user_movies', user_id=user.id) }}" class="btn btn-outline-secondary">Cancel</a>

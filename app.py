@@ -163,6 +163,9 @@ def add_movie(user_id):
     if request.method == "POST":
         title = request.form.get("title", "").strip()
         year = request.form.get("year", "").strip()
+        planned = bool(request.form.get("planned"))
+        watched = bool(request.form.get("watched"))
+        favorite = bool(request.form.get("favorite"))
 
         if not title:
             flash("Please provide a movie title.")
@@ -176,9 +179,9 @@ def add_movie(user_id):
             logger.warning("OMDb returned no result for '%s' (%s)", title, year)
             return redirect(request.url)
 
-        data_manager.add_movie(user_id, movie_data)
+        data_manager.add_movie(user_id, movie_data, planned, watched, favorite)
         logger.info("Movie '%s' added to user %d via OMDb", movie_data['title'], user_id)
-        flash(f"Movie '{movie_data['title']}' added to {user.name}'s list.")
+        flash(f"Movie '{movie_data['title']}' added to {user.first_name}'s list.")
         return redirect(url_for("user_movies", user_id=user_id))
 
     return render_template("add_movie.html", user=user)
