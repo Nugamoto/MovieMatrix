@@ -1,4 +1,9 @@
+import re
 from datetime import datetime
+
+USERNAME_RE = re.compile(r"^[A-Za-z0-9_]{3,30}$")
+EMAIL_RE = re.compile(r"^[\w\.-]+@[\w\.-]+\.\w{2,}$")
+NAME_RE = re.compile(r"^[A-Za-zÀ-ÿ' -]{2,40}$")
 
 MIN_YEAR = 1878  # First known film
 CURRENT_YEAR = datetime.now().year
@@ -7,19 +12,20 @@ MIN_RATING = 0.0
 MAX_RATING = 10.0
 
 
-def is_valid_username(name: str) -> bool:
-    """
-    Validate that the username contains at least one alphabetical character.
+def is_valid_username(username: str) -> bool:
+    return bool(USERNAME_RE.fullmatch(username))
 
-    Args:
-        name (str): The username to validate.
 
-    Returns:
-        bool: True if valid, False otherwise.
-    """
-    if not name:
-        return False
-    return any(char.isalpha() for char in name)
+def is_valid_email(email: str) -> bool:
+    return bool(EMAIL_RE.fullmatch(email))
+
+
+def is_valid_name(name: str) -> bool:
+    return bool(NAME_RE.fullmatch(name.strip()))
+
+
+def passwords_match(pw1: str, pw2: str) -> bool:
+    return pw1 and pw1 == pw2
 
 
 def is_valid_year(year: str) -> bool:
