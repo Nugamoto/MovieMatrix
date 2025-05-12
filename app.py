@@ -327,8 +327,13 @@ def edit_review(user_id, review_id):
     next_url = request.args.get("next")
 
     if request.method == "POST":
+        title = request.form.get("title", "").strip()
         text = request.form.get("text", "").strip()
         rating = request.form.get("user_rating", "").strip()
+
+        if not title:
+            flash("Review title cannot be empty.")
+            return redirect(request.url)
 
         if not text:
             flash("Review text cannot be empty.")
@@ -341,6 +346,7 @@ def edit_review(user_id, review_id):
             return redirect(request.url)
 
         updated_data = {
+            "title": title,
             "text": text,
             "user_rating": normalize_rating(rating),
         }
