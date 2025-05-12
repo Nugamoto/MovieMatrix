@@ -1,17 +1,49 @@
 {% extends "base.html" %}
-
-{% block title %}Add User - MovieMatrix{% endblock %}
+{% block title %}Register User - MovieMatrix{% endblock %}
 
 {% block content %}
-<h1>Add User</h1>
+<h1 class="mb-4">Register User</h1>
 
-<form method="POST" class="mt-4">
-    <div class="mb-3">
-        <label for="name" class="form-label">User Name</label>
-        <input type="text" class="form-control" id="name" name="name" required>
+<form method="POST" novalidate>
+    <div class="row g-3">
+        <div class="col-md-6">
+            <label for="username" class="form-label">Username *</label>
+            <input type="text" class="form-control" id="username" name="username" required>
+        </div>
+
+        <div class="col-md-6">
+            <label for="email" class="form-label">E-Mail *</label>
+            <input type="email" class="form-control" id="email" name="email" required>
+        </div>
+
+        <div class="col-md-6">
+            <label for="first_name" class="form-label">First Name *</label>
+            <input type="text" class="form-control" id="first_name" name="first_name" required>
+        </div>
+
+        <div class="col-md-6">
+            <label for="last_name" class="form-label">Last Name</label>
+            <input type="text" class="form-control" id="last_name" name="last_name">
+        </div>
+
+        <div class="col-md-4">
+            <label for="age" class="form-label">Age</label>
+            <input type="number" min="0" class="form-control" id="age" name="age">
+        </div>
+
+        <div class="col-md-4">
+            <label for="password" class="form-label">Password *</label>
+            <input type="password" class="form-control" id="password" name="password" required>
+        </div>
+
+        <div class="col-md-4">
+            <label for="confirm_password" class="form-label">Confirm Password *</label>
+            <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+        </div>
     </div>
+
     <div class="mt-4 d-flex gap-2">
-        <button type="submit" class="btn btn-success">Add User</button>
+        <button type="submit" class="btn btn-success">Create User</button>
         <a href="{{ url_for('list_users') }}" class="btn btn-outline-secondary">Cancel</a>
     </div>
 </form>

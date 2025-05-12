@@ -5,17 +5,21 @@ from logging.handlers import RotatingFileHandler
 from dotenv import load_dotenv
 from flask import Flask, render_template, request, redirect, url_for, flash
 from sqlalchemy.exc import SQLAlchemyError
+from werkzeug.security import generate_password_hash
 
 from clients.omdb_client import fetch_movie
 from datamanager.sqlite_data_manager import SQLiteDataManager
 from helpers import (
-    is_valid_username,
-    get_user_by_id,
     get_movie_by_id,
     get_review_by_id,
+    get_user_by_id,
+    is_valid_username,
+    is_valid_email,
+    is_valid_name,
     is_valid_year,
     is_valid_rating,
     normalize_rating,
+    passwords_match,
 )
 
 # Load environment variables
@@ -58,26 +62,67 @@ def list_users():
     return render_template("users.html", users=users)
 
 
+# ------------------------------------------------------------------ #
+#                    USER REGISTRATION ROUTE                         #
+# ------------------------------------------------------------------ #
 @app.route("/add_user", methods=["GET", "POST"])
 def add_user():
     if request.method == "POST":
-        name = request.form.get("name", "").strip()
+        username = request.form.get("username", "").strip()
+        email = request.form.get("email", "").strip()
+        first_name = request.form.get("first_name", "").strip()
+        last_name = request.form.get("last_name", "").strip() or None
+        age_raw = request.form.get("age", "").strip()
+        password = request.form.get("password", "")
+        confirm_pw = request.form.get("confirm_password", "")
 
-        if not is_valid_username(name):
-            flash("Please enter a valid username.")
-            logger.warning("Invalid username submitted: '%s'", name)
+        # --- Validation -------------------------------------------------- #
+        if not is_valid_username(username):
+            flash("Invalid username (3-30 chars, letters, digits, _).")
+            logger.warning("Invalid username submitted: %s", username)
             return redirect(request.url)
 
+        if not is_valid_email(email):
+            flash("Invalid e-mail address.")
+            return redirect(request.url)
+
+        if not is_valid_name(first_name):
+            flash("First name may only contain letters, spaces, - and '.")
+            return redirect(request.url)
+
+        if last_name and not is_valid_name(last_name):
+            flash("Last name may only contain letters, spaces, - and '.")
+            return redirect(request.url)
+
+        if not passwords_match(password, confirm_pw):
+            flash("Passwords do not match.")
+            return redirect(request.url)
+
+        age = int(age_raw) if age_raw.isdigit() else None
+        pw_hash = generate_password_hash(password)
+
+        # --- Persistence ------------------------------------------------- #
         try:
-            data_manager.add_user(name)
-            logger.info("User added: '%s'", name)
-            flash(f"User '{name}' was added.")
+            user_obj = data_manager.add_user(
+                username,
+                email,
+                first_name,
+                pw_hash,
+                last_name,
+                age,
+            )
+            if user_obj:
+                logger.info("User registered: %s", username)
+                flash(f"User '{username}' was created.")
+            else:
+                flash("Username or e-mail already exists.")
             return redirect(url_for("list_users"))
-        except SQLAlchemyError as e:
-            logger.error("Database error while adding user '%s': %s", name, str(e))
-            flash("An error occurred while adding the user.")
+        except SQLAlchemyError as exc:
+            logger.error("DB error while adding user '%s': %s", username, exc)
+            flash("A database error occurred while adding the user.")
             return redirect(request.url)
 
+    # GET
     return render_template("add_user.html")
 
 
