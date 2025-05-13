@@ -45,9 +45,6 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from clients.omdb_client import fetch_movie
 from datamanager.sqlite_data_manager import SQLiteDataManager
 from helpers import (
-    get_movie_by_id,
-    get_review_by_id,
-    get_user_by_id,
     is_valid_email,
     is_valid_name,
     is_valid_rating,
@@ -98,7 +95,7 @@ login_manager.init_app(app)
 @login_manager.user_loader
 def load_user(user_id: str):
     """Return a User object for Flask-Login sessions."""
-    return data_manager.get_user(int(user_id))
+    return data_manager.get_user_by_id(int(user_id))
 
 
 # ---------------------------------------------------------------------- #
@@ -219,7 +216,7 @@ def delete_user(user_id: int):
     if current_user.id != user_id:
         abort(403)
 
-    user = get_user_by_id(data_manager.get_all_users(), user_id)
+    user = data_manager.get_user_by_id(user_id)
     if not user:
         flash("User not found.", "danger")
         return redirect(url_for("list_users"))
@@ -236,7 +233,7 @@ def user_movies(user_id: int):
     if current_user.id != user_id:
         abort(403)
 
-    user = get_user_by_id(data_manager.get_all_users(), user_id)
+    user = data_manager.get_user_by_id(user_id)
     if not user:
         flash("User not found.", "danger")
         return redirect(url_for("list_users"))
@@ -249,7 +246,6 @@ def user_movies(user_id: int):
 
 @app.route("/movies")
 def all_movies():
-    """Display a list of all movies in the database."""
     movies = data_manager.get_all_movies()
     return render_template("all_movies.html", movies=movies)
 
@@ -258,7 +254,7 @@ def all_movies():
 @login_required
 def add_movie(user_id: int):
     """Add a movie to user's list via OMDb lookup."""
-    user = get_user_by_id(data_manager.get_all_users(), user_id)
+    user = data_manager.get_user_by_id(user_id)
     if not user:
         flash("User not found.", "danger")
         return redirect(url_for("list_users"))
@@ -293,8 +289,8 @@ def update_movie(user_id: int, movie_id: int):
     if current_user.id != user_id:
         abort(403)
 
-    user = get_user_by_id(data_manager.get_all_users(), user_id)
-    movie = get_movie_by_id(data_manager.get_movies_by_user(user_id), movie_id)
+    user = data_manager.get_user_by_id(user_id)
+    movie = data_manager.get_movie_by_id(movie_id)
     if not user or not movie:
         flash("User or movie not found.", "danger")
         return redirect(url_for("list_users"))
@@ -336,7 +332,7 @@ def delete_movie(user_id: int, movie_id: int):
     if current_user.id != user_id:
         abort(403)
 
-    movie = get_movie_by_id(data_manager.get_movies_by_user(user_id), movie_id)
+    movie = data_manager.get_movie_by_id(movie_id)
     if not movie:
         flash("Movie not found.", "danger")
         return redirect(url_for("user_movies", user_id=user_id))
@@ -355,7 +351,7 @@ def user_reviews(user_id: int):
     if current_user.id != user_id:
         abort(403)
 
-    user = get_user_by_id(data_manager.get_all_users(), user_id)
+    user = data_manager.get_user_by_id(user_id)
     if not user:
         flash(f"User with ID {user_id} not found.")
         logger.warning("User ID %d not found when accessing reviews", user_id)
@@ -368,7 +364,6 @@ def user_reviews(user_id: int):
 
 @app.route("/users/<int:user_id>/review/<int:review_id>")
 def review_detail(user_id: int, review_id: int):
-    """Display details of a specific user-authored review."""
     review = data_manager.get_review_detail(review_id)
     if not review or review.user_id != user_id:
         flash("Review not found.", "warning")
@@ -387,7 +382,7 @@ def review_detail(user_id: int, review_id: int):
 @app.route("/movies/<int:movie_id>/reviews")
 def movie_reviews(movie_id: int):
     """List reviews for a movie; optional user_id enables 'Add Review' button."""
-    movie = get_movie_by_id(data_manager.get_all_movies(), movie_id)
+    movie = data_manager.get_movie_by_id(movie_id)
     if not movie:
         flash(f"Movie with ID {movie_id} not found.")
         logger.warning("Movie ID %d not found when accessing reviews", movie_id)
@@ -410,8 +405,8 @@ def add_review(user_id: int, movie_id: int):
     if current_user.id != user_id:
         abort(403)
 
-    user = get_user_by_id(data_manager.get_all_users(), user_id)
-    movie = get_movie_by_id(data_manager.get_all_movies(), movie_id)
+    user = data_manager.get_user_by_id(user_id)
+    movie = data_manager.get_movie_by_id(movie_id)
     if not user or not movie:
         flash("User or movie not found.", "danger")
         return redirect(url_for("list_users"))
@@ -446,13 +441,13 @@ def edit_review(user_id: int, review_id: int):
     if current_user.id != user_id:
         abort(403)
 
-    user = get_user_by_id(data_manager.get_all_users(), user_id)
-    review = get_review_by_id(data_manager.get_reviews_by_user(user_id), review_id)
+    user = data_manager.get_user_by_id(user_id)
+    review = data_manager.get_review_by_id(review_id)
     if not user or not review:
         flash("User or review not found.", "danger")
         return redirect(url_for("list_users"))
 
-    movie = get_movie_by_id(data_manager.get_movies_by_user(user_id), review.movie_id)
+    movie = data_manager.get_movie_by_id(review.movie_id)
     next_url = request.args.get("next")
 
     if request.method == "POST":
@@ -484,7 +479,7 @@ def delete_review(user_id: int, review_id: int):
     if current_user.id != user_id:
         abort(403)
 
-    review = get_review_by_id(data_manager.get_reviews_by_user(user_id), review_id)
+    review = data_manager.get_review_by_id(review_id)
     if not review:
         flash("Review not found.", "danger")
         return redirect(url_for("user_reviews", user_id=user_id))
