@@ -3,6 +3,12 @@ from abc import ABC, abstractmethod
 
 class DataManagerInterface(ABC):
     # === USER ===
+
+    @abstractmethod
+    def get_user(self, user_id: int):
+        """Return a user object by a given ID."""
+        raise NotImplementedError
+
     @abstractmethod
     def get_all_users(self) -> list:
         """Return all user objects."""
