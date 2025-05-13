@@ -249,6 +249,7 @@ def user_movies(user_id: int):
 
 @app.route("/movies")
 def all_movies():
+    """Display a list of all movies in the database."""
     movies = data_manager.get_all_movies()
     return render_template("all_movies.html", movies=movies)
 
@@ -367,6 +368,7 @@ def user_reviews(user_id: int):
 
 @app.route("/users/<int:user_id>/review/<int:review_id>")
 def review_detail(user_id: int, review_id: int):
+    """Display details of a specific user-authored review."""
     review = data_manager.get_review_detail(review_id)
     if not review or review.user_id != user_id:
         flash("Review not found.", "warning")
@@ -503,6 +505,8 @@ def page_not_found(e):
 
 @app.errorhandler(403)
 def forbidden(e):
+    """Handle 403 Forbidden errors with a redirect and flash message."""
+    logger.warning("403 error: Forbidden access to %s", request.path)
     flash("You are not allowed to access this resource.", "warning")
     return redirect(url_for("list_users"))
 
