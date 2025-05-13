@@ -60,6 +60,12 @@ class SQLiteDataManager(DataManagerInterface):
     #                                user                                   #
     # --------------------------------------------------------------------- #
 
+    def get_user(self, user_id: int) -> User | None:
+        with self.Session() as session:
+            stmt = select(User).where(User.id == user_id)
+            result = session.execute(stmt).scalar_one_or_none()
+            return result
+
     def get_all_users(self) -> List[User]:
         with self.Session() as session:
             return session.execute(select(User)).scalars().all()
