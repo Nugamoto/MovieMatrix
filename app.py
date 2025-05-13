@@ -30,12 +30,14 @@ from flask import (
     render_template,
     request,
     url_for,
+    abort,
 )
 from flask_login import (
     LoginManager,
     login_user,
     logout_user,
     login_required,
+    current_user,
 )
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -224,8 +226,12 @@ def delete_user(user_id: int):
 
 
 @app.route("/users/<int:user_id>")
+@login_required
 def user_movies(user_id: int):
     """Show movie list for a given user."""
+    if current_user.id != user_id:
+        abort(403)
+
     user = get_user_by_id(data_manager.get_all_users(), user_id)
     if not user:
         flash("User not found.", "danger")
@@ -238,6 +244,7 @@ def user_movies(user_id: int):
 # ------------------------------ MOVIES -------------------------------- #
 
 @app.route("/users/<int:user_id>/add_movie", methods=["GET", "POST"])
+@login_required
 def add_movie(user_id: int):
     """Add a movie to user's list via OMDb lookup."""
     user = get_user_by_id(data_manager.get_all_users(), user_id)
@@ -269,8 +276,12 @@ def add_movie(user_id: int):
 
 
 @app.route("/users/<int:user_id>/update_movie/<int:movie_id>", methods=["GET", "POST"])
+@login_required
 def update_movie(user_id: int, movie_id: int):
     """Edit movie meta-data (title, director, year, genre, IMDb rating)."""
+    if current_user.id != user_id:
+        abort(403)
+
     user = get_user_by_id(data_manager.get_all_users(), user_id)
     movie = get_movie_by_id(data_manager.get_movies_by_user(user_id), movie_id)
     if not user or not movie:
@@ -308,8 +319,12 @@ def update_movie(user_id: int, movie_id: int):
 
 
 @app.route("/users/<int:user_id>/delete_movie/<int:movie_id>", methods=["POST"])
+@login_required
 def delete_movie(user_id: int, movie_id: int):
     """Remove a movie link (and possibly the movie) from a user."""
+    if current_user.id != user_id:
+        abort(403)
+
     movie = get_movie_by_id(data_manager.get_movies_by_user(user_id), movie_id)
     if not movie:
         flash("Movie not found.", "danger")
@@ -323,8 +338,12 @@ def delete_movie(user_id: int, movie_id: int):
 # ------------------------------ REVIEWS ------------------------------ #
 
 @app.route("/users/<int:user_id>/reviews")
+@login_required
 def user_reviews(user_id: int):
     """Display all reviews authored by a user."""
+    if current_user.id != user_id:
+        abort(403)
+
     user = get_user_by_id(data_manager.get_all_users(), user_id)
     if not user:
         flash(f"User with ID {user_id} not found.")
@@ -359,8 +378,12 @@ def movie_reviews(movie_id: int):
 
 
 @app.route("/users/<int:user_id>/movies/<int:movie_id>/add_review", methods=["GET", "POST"])
+@login_required
 def add_review(user_id: int, movie_id: int):
     """Add a new review (title, text, rating) for a movie."""
+    if current_user.id != user_id:
+        abort(403)
+
     user = get_user_by_id(data_manager.get_all_users(), user_id)
     movie = get_movie_by_id(data_manager.get_all_movies(), movie_id)
     if not user or not movie:
@@ -391,8 +414,12 @@ def add_review(user_id: int, movie_id: int):
 
 
 @app.route("/users/<int:user_id>/edit_review/<int:review_id>", methods=["GET", "POST"])
+@login_required
 def edit_review(user_id: int, review_id: int):
     """Edit a user’s review (title, text, rating)."""
+    if current_user.id != user_id:
+        abort(403)
+
     user = get_user_by_id(data_manager.get_all_users(), user_id)
     review = get_review_by_id(data_manager.get_reviews_by_user(user_id), review_id)
     if not user or not review:
@@ -425,8 +452,12 @@ def edit_review(user_id: int, review_id: int):
 
 
 @app.route("/users/<int:user_id>/delete_review/<int:review_id>", methods=["POST"])
+@login_required
 def delete_review(user_id: int, review_id: int):
     """Delete a review authored by a user."""
+    if current_user.id != user_id:
+        abort(403)
+
     review = get_review_by_id(data_manager.get_reviews_by_user(user_id), review_id)
     if not review:
         flash("Review not found.", "danger")
@@ -444,6 +475,12 @@ def page_not_found(e):
     """Render custom 404 page."""
     logger.warning("404 error: %s", request.path)
     return render_template("404.html"), 404
+
+
+@app.errorhandler(403)
+def forbidden(e):
+    flash("You are not allowed to access this resource.", "warning")
+    return redirect(url_for("list_users"))
 
 
 @app.errorhandler(500)
