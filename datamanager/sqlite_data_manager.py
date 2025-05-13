@@ -60,11 +60,10 @@ class SQLiteDataManager(DataManagerInterface):
     #                                user                                   #
     # --------------------------------------------------------------------- #
 
-    def get_user(self, user_id: int) -> User | None:
+    def get_user_by_id(self, user_id: int) -> Optional[User]:
+        """Return a user object by ID, or None if not found."""
         with self.Session() as session:
-            stmt = select(User).where(User.id == user_id)
-            result = session.execute(stmt).scalar_one_or_none()
-            return result
+            return session.get(User, user_id)
 
     def get_user_by_username(self, username: str):
         with self.Session() as session:
@@ -134,6 +133,11 @@ class SQLiteDataManager(DataManagerInterface):
     # --------------------------------------------------------------------- #
     #                                movie                                  #
     # --------------------------------------------------------------------- #
+
+    def get_movie_by_id(self, movie_id: int) -> Optional[Movie]:
+        """Return a movie object by ID, or None if not found."""
+        with self.Session() as session:
+            return session.get(Movie, movie_id)
 
     def get_all_movies(self) -> List[Movie]:
         with self.Session() as session:
@@ -237,28 +241,10 @@ class SQLiteDataManager(DataManagerInterface):
     #                                review                                 #
     # --------------------------------------------------------------------- #
 
-    def add_review(
-            self, user_id: int, movie_id: int, review_data: Dict[str, Any]
-    ) -> Optional[Review]:
+    def get_review_by_id(self, review_id: int) -> Optional[Review]:
+        """Return a review object by ID, or None if not found."""
         with self.Session() as session:
-            if not (session.get(User, user_id) and session.get(Movie, movie_id)):
-                logger.warning(
-                    "Add review failed: user_id=%d or movie_id=%d not found.",
-                    user_id,
-                    movie_id,
-                )
-                return None
-
-            review = Review(
-                user_id=user_id,
-                movie_id=movie_id,
-                title=review_data.get("title"),
-                text=review_data.get("text"),
-                user_rating=review_data.get("user_rating"),
-            )
-            session.add(review)
-            session.commit()
-            return review
+            return session.get(Review, review_id)
 
     def get_review_detail(self, review_id: int):
         with self.Session() as session:
@@ -289,6 +275,29 @@ class SQLiteDataManager(DataManagerInterface):
                 .where(Review.user_id == user_id)
             )
             return session.execute(stmt).scalars().all()
+
+    def add_review(
+            self, user_id: int, movie_id: int, review_data: Dict[str, Any]
+    ) -> Optional[Review]:
+        with self.Session() as session:
+            if not (session.get(User, user_id) and session.get(Movie, movie_id)):
+                logger.warning(
+                    "Add review failed: user_id=%d or movie_id=%d not found.",
+                    user_id,
+                    movie_id,
+                )
+                return None
+
+            review = Review(
+                user_id=user_id,
+                movie_id=movie_id,
+                title=review_data.get("title"),
+                text=review_data.get("text"),
+                user_rating=review_data.get("user_rating"),
+            )
+            session.add(review)
+            session.commit()
+            return review
 
     def update_review(
             self, review_id: int, updated_data: Dict[str, Any]
