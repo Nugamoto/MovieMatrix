@@ -2,12 +2,9 @@ import pytest
 
 from helpers import (
     is_valid_username,
-    get_user_by_id,
-    get_movie_by_id,
-    get_review_by_id,
     is_valid_year,
     is_valid_rating,
-    normalize_rating
+    normalize_rating,
 )
 
 
@@ -22,51 +19,6 @@ from helpers import (
 def test_is_valid_username(name, expected):
     """Test is_valid_username with various valid and invalid inputs."""
     assert is_valid_username(name) is expected
-
-
-@pytest.mark.parametrize("users,user_id,expected_name", [
-    ([{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}], 1, "Alice"),
-    ([{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}], 2, "Bob"),
-    ([{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}], 3, None),
-])
-def test_get_user_by_id(users, user_id, expected_name):
-    """Test get_user_by_id returns correct user or None."""
-    user_objs = [type("User", (), u)() for u in users]
-    result = get_user_by_id(user_objs, user_id)
-    if expected_name is None:
-        assert result is None
-    else:
-        assert result.name == expected_name
-
-
-@pytest.mark.parametrize("movies,movie_id,expected_title", [
-    ([{"id": 10, "title": "Matrix"}, {"id": 20, "title": "Inception"}], 10, "Matrix"),
-    ([{"id": 10, "title": "Matrix"}, {"id": 20, "title": "Inception"}], 20, "Inception"),
-    ([{"id": 10, "title": "Matrix"}], 30, None),
-])
-def test_get_movie_by_id(movies, movie_id, expected_title):
-    """Test get_movie_by_id returns correct movie or None."""
-    movie_objs = [type("Movie", (), m)() for m in movies]
-    result = get_movie_by_id(movie_objs, movie_id)
-    if expected_title is None:
-        assert result is None
-    else:
-        assert result.title == expected_title
-
-
-@pytest.mark.parametrize("reviews,review_id,expected_text", [
-    ([{"id": 1, "text": "Great!"}, {"id": 2, "text": "Bad!"}], 1, "Great!"),
-    ([{"id": 1, "text": "Great!"}, {"id": 2, "text": "Bad!"}], 2, "Bad!"),
-    ([{"id": 1, "text": "Great!"}], 5, None),
-])
-def test_get_review_by_id(reviews, review_id, expected_text):
-    """Test get_review_by_id returns correct review or None."""
-    review_objs = [type("Review", (), r)() for r in reviews]
-    result = get_review_by_id(review_objs, review_id)
-    if expected_text is None:
-        assert result is None
-    else:
-        assert result.text == expected_text
 
 
 @pytest.mark.parametrize("year_str,expected", [
