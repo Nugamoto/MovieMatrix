@@ -247,6 +247,12 @@ def user_movies(user_id: int):
 
 # ------------------------------ MOVIES -------------------------------- #
 
+@app.route("/movies")
+def all_movies():
+    movies = data_manager.get_all_movies()
+    return render_template("all_movies.html", movies=movies)
+
+
 @app.route("/users/<int:user_id>/add_movie", methods=["GET", "POST"])
 @login_required
 def add_movie(user_id: int):
@@ -357,6 +363,26 @@ def user_reviews(user_id: int):
     reviews = data_manager.get_reviews_by_user(user_id)
     next_url = request.args.get("next") or request.referrer or url_for("user_movies", user_id=user_id)
     return render_template("user_reviews.html", user=user, reviews=reviews, next=next_url)
+
+
+@app.route("/users/<int:user_id>/review/<int:review_id>")
+def review_detail(user_id: int, review_id: int):
+    review = get_review_by_id(
+        data_manager.get_reviews_by_user(user_id), review_id
+    )
+    if not review:
+        flash("Review not found.", "warning")
+        return redirect(url_for("user_reviews", user_id=user_id))
+
+    movie = review.movie
+    is_owner = current_user.is_authenticated and current_user.id == user_id
+    return render_template(
+        "review_detail.html",
+        review=review,
+        movie=movie,
+        is_owner=is_owner,
+        user_id=user_id,
+    )
 
 
 @app.route("/movies/<int:movie_id>/reviews")

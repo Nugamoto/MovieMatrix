@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Review “{{ review.title }}” - MovieMatrix{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">{{ review.title }}</h1>
+    <a href="{{ url_for('movie_reviews', movie_id=movie.id, user_id=user_id) }}"
+       class="btn btn-outline-secondary">Back to Reviews</a>
+</div>
+
+{% if movie.poster_url and movie.poster_url != 'N/A' %}
+<div class="text-center mb-4">
+    <img src="{{ movie.poster_url }}" class="img-fluid rounded shadow-sm"
+         alt="Poster of {{ movie.title }}" style="max-height:300px;">
+</div>
+{% endif %}
+
+<p><strong>Movie:</strong> {{ movie.title }} ({{ movie.year }})</p>
+<p><strong>Author:</strong> {{ review.user.username }}</p>
+<p><strong>Rating:</strong> {{ review.user_rating }}</p>
+
+<hr>
+<p>{{ review.text }}</p>
+
+{% if is_owner %}
+<hr>
+<div class="d-flex gap-2">
+    <a href="{{ url_for('edit_review', user_id=user_id, review_id=review.id, next=request.full_path) }}"
+       class="btn btn-sm btn-outline-secondary">Edit</a>
+    <form method="POST"
+          action="{{ url_for('delete_review', user_id=user_id, review_id=review.id) }}">
+        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+    </form>
+</div>
+{% endif %}
+{% endblock %}

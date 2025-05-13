@@ -20,6 +20,10 @@
         <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
+                    <a class="nav-link {% if request.path == '/movies' %}active{% endif %}"
+                       href="{{ url_for('all_movies') }}">Movies</a>
+                </li>
+                <li class="nav-item">
                     <a class="nav-link {% if request.path.startswith('/users') %}active{% endif %}"
                        href="{{ url_for('list_users') }}">Users</a>
                 </li>
