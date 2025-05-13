@@ -4,8 +4,13 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h1 class="mb-0">{{ user.first_name }}’s Reviews</h1>
-    <a href="{{ next or url_for('user_movies', user_id=user.id) }}"
-       class="btn btn-outline-secondary">Back</a>
+
+    <div class="d-flex gap-2">
+        <a href="{{ url_for('user_movies', user_id=user.id) }}"
+           class="btn btn-outline-primary">Movies</a>
+        <a href="{{ url_for('list_users') }}"
+           class="btn btn-outline-secondary">Back&nbsp;to&nbsp;Users</a>
+    </div>
 </div>
 
 {% if reviews %}
@@ -25,10 +30,15 @@
         <td>{{ review.title }}</td>
         <td>{{ review.user_rating }}</td>
         <td class="d-flex gap-2 flex-wrap">
-            <a href="{{ url_for('edit_review', user_id=user.id, review_id=review.id, next=request.full_path) }}"
+            <a href="{{ url_for('edit_review',
+                                user_id=user.id,
+                                review_id=review.id,
+                                next=request.path) }}"
                class="btn btn-sm btn-outline-secondary">Edit</a>
             <form method="POST" class="delete-review-form d-inline"
-                  action="{{ url_for('delete_review', user_id=user.id, review_id=review.id) }}">
+                  action="{{ url_for('delete_review',
+                                     user_id=user.id,
+                                     review_id=review.id) }}">
                 <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
             </form>
         </td>
