@@ -31,6 +31,7 @@ from flask import (
     request,
     url_for,
 )
+from flask_login import LoginManager
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.security import generate_password_hash
 
@@ -78,6 +79,19 @@ logger = logging.getLogger()
 if not logger.handlers:  # prevent duplicate handlers in debug reload
     logger.addHandler(file_handler)
 logger.setLevel(logging.INFO)
+
+# --- Auth ------------------------------------------------------------- #
+
+login_manager = LoginManager()
+login_manager.login_view = "login"  # Name der späteren Login-Route
+login_manager.login_message_category = "warning"
+login_manager.init_app(app)
+
+
+@login_manager.user_loader
+def load_user(user_id: str):
+    """Return a User object for Flask-Login sessions."""
+    return data_manager.get_user(int(user_id))
 
 
 # ---------------------------------------------------------------------- #
