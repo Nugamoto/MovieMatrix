@@ -31,9 +31,14 @@ from flask import (
     request,
     url_for,
 )
-from flask_login import LoginManager
+from flask_login import (
+    LoginManager,
+    login_user,
+    logout_user,
+    login_required,
+)
 from sqlalchemy.exc import SQLAlchemyError
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from clients.omdb_client import fetch_movie
 from datamanager.sqlite_data_manager import SQLiteDataManager
@@ -80,7 +85,7 @@ if not logger.handlers:  # prevent duplicate handlers in debug reload
     logger.addHandler(file_handler)
 logger.setLevel(logging.INFO)
 
-# --- Auth ------------------------------------------------------------- #
+# ------------------------------ Auth ---------------------------------- #
 
 login_manager = LoginManager()
 login_manager.login_view = "login"  # Name der späteren Login-Route
@@ -105,14 +110,44 @@ def home():
     return render_template("home.html")
 
 
+# ------------------------------ LOGIN --------------------------------- #
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    """Render login form and authenticate user."""
+    if request.method == "POST":
+        username = request.form.get("username", "").strip()
+        password = request.form.get("password", "")
+        user = data_manager.get_user_by_username(username)  # Helper (s. unten)
+
+        if user and check_password_hash(user.password_hash, password):
+            login_user(user)
+            flash(f"Welcome, {user.first_name}!", "success")
+            next_page = request.args.get("next") or url_for("list_users")
+            return redirect(next_page)
+
+        flash("Invalid username or password.", "danger")
+    return render_template("login.html")
+
+
+# ------------------------------ LOGOUT -------------------------------- #
+
+@app.route("/logout")
+@login_required
+def logout():
+    """Log the current user out and redirect to login page."""
+    logout_user()
+    flash("You have been logged out.", "info")
+    return redirect(url_for("login"))
+
+
+# ------------------------------ USERS --------------------------------- #
+
 @app.route("/users")
 def list_users():
     """List all registered users."""
     users = data_manager.get_all_users()
     return render_template("users.html", users=users)
-
-
-# ------------------------------ USERS --------------------------------- #
 
 
 @app.route("/add_user", methods=["GET", "POST"])
@@ -202,7 +237,6 @@ def user_movies(user_id: int):
 
 # ------------------------------ MOVIES -------------------------------- #
 
-
 @app.route("/users/<int:user_id>/add_movie", methods=["GET", "POST"])
 def add_movie(user_id: int):
     """Add a movie to user's list via OMDb lookup."""
@@ -287,7 +321,6 @@ def delete_movie(user_id: int, movie_id: int):
 
 
 # ------------------------------ REVIEWS ------------------------------ #
-
 
 @app.route("/users/<int:user_id>/reviews")
 def user_reviews(user_id: int):
@@ -405,7 +438,6 @@ def delete_review(user_id: int, review_id: int):
 
 
 # --------------------------- Error handlers -------------------------- #
-
 
 @app.errorhandler(404)
 def page_not_found(e):

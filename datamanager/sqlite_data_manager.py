@@ -66,6 +66,11 @@ class SQLiteDataManager(DataManagerInterface):
             result = session.execute(stmt).scalar_one_or_none()
             return result
 
+    def get_user_by_username(self, username: str):
+        with self.Session() as session:
+            stmt = select(User).where(User.username == username)
+            return session.execute(stmt).scalar_one_or_none()
+
     def get_all_users(self) -> List[User]:
         with self.Session() as session:
             return session.execute(select(User)).scalars().all()
