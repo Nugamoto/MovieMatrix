@@ -21,11 +21,15 @@
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
                     <a class="nav-link {% if request.path.startswith('/users') %}active{% endif %}"
-                       href="/users">Users</a>
+                       href="{{ url_for('list_users') }}">Users</a>
                 </li>
+
                 {% if current_user.is_authenticated %}
                 <li class="nav-item">
-                    <span class="navbar-text me-2">Hi, {{ current_user.first_name }}</span>
+                    <a class="nav-link"
+                       href="#"
+                       id="nav-profile-link">{{ current_user.username }}</a>
+                    {# später z. B. url_for('profile', user_id=current_user.id) #}
                 </li>
                 <li class="nav-item">
                     <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
