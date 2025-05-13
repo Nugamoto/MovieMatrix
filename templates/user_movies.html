@@ -49,9 +49,10 @@
                     <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                 </form>
 
-                <a href="{{ url_for('movie_reviews', movie_id=movie.id, user_id=user.id, next=request.path) }}"
-                   class="btn btn-sm btn-outline-success">Reviews</a>
-            </div>
+                <a href="{{ url_for('movie_reviews',
+                    movie_id=movie.id,
+                    next=request.path) }}"
+                   class="btn btn-sm btn-outline-success">Reviews</a></div>
         </td>
     </tr>
     {% endfor %}

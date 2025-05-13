@@ -395,14 +395,11 @@ def movie_reviews(movie_id: int):
         return redirect(url_for("list_users"))
 
     reviews = data_manager.get_reviews_for_movie(movie_id)
-    user_id = request.args.get("user_id", type=int)
     next_url = request.args.get("next") or url_for("list_users")
-
     return render_template(
         "movie_reviews.html",
         movie=movie,
         reviews=reviews,
-        user_id=user_id,
         next_url=next_url,
     )
 
