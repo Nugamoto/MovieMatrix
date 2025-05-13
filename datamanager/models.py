@@ -1,10 +1,11 @@
+from flask_login import UserMixin
 from sqlalchemy import Column, Integer, String, Float, ForeignKey, Text, UniqueConstraint, Boolean
 from sqlalchemy.orm import relationship, declarative_base
 
 Base = declarative_base()
 
 
-class User(Base):
+class User(Base, UserMixin):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
@@ -18,7 +19,7 @@ class User(Base):
     reviews = relationship("Review", back_populates="user", cascade="all, delete")
     user_movies = relationship("UserMovie", back_populates="user", cascade="all, delete")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<User(id={self.id}, username='{self.username}', email='{self.email}')>"
 
 
@@ -38,7 +39,7 @@ class Movie(Base):
 
     __table_args__ = (UniqueConstraint('title', 'year', name='uix_title_year'),)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"<Movie(id={self.id}, title='{self.title}', year={self.year})>"
 
 
@@ -55,7 +56,7 @@ class Review(Base):
     user = relationship("User", back_populates="reviews")
     movie = relationship("Movie", back_populates="reviews")
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"<Review(user_id={self.user_id}, movie_id={self.movie_id}, "
             f"title='{self.title}', rating={self.user_rating})>"
@@ -77,7 +78,7 @@ class UserMovie(Base):
 
     __table_args__ = (UniqueConstraint('user_id', 'movie_id', name='uix_user_movie'),)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return (
             f"<UserMovie(user_id={self.user_id}, movie_id={self.movie_id}, "
             f"watched={self.is_watched}, planned={self.is_planned}, favorite={self.is_favorite})>"
