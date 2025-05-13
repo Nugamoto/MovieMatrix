@@ -213,8 +213,12 @@ def add_user():
 
 
 @app.route("/delete_user/<int:user_id>", methods=["POST"])
+@login_required
 def delete_user(user_id: int):
     """Delete a user and cascade their movies & reviews."""
+    if current_user.id != user_id:
+        abort(403)
+
     user = get_user_by_id(data_manager.get_all_users(), user_id)
     if not user:
         flash("User not found.", "danger")
