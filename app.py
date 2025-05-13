@@ -367,10 +367,8 @@ def user_reviews(user_id: int):
 
 @app.route("/users/<int:user_id>/review/<int:review_id>")
 def review_detail(user_id: int, review_id: int):
-    review = get_review_by_id(
-        data_manager.get_reviews_by_user(user_id), review_id
-    )
-    if not review:
+    review = data_manager.get_review_detail(review_id)
+    if not review or review.user_id != user_id:
         flash("Review not found.", "warning")
         return redirect(url_for("user_reviews", user_id=user_id))
 
@@ -381,7 +379,6 @@ def review_detail(user_id: int, review_id: int):
         review=review,
         movie=movie,
         is_owner=is_owner,
-        user_id=user_id,
     )
 
 

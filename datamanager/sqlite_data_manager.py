@@ -260,6 +260,18 @@ class SQLiteDataManager(DataManagerInterface):
             session.commit()
             return review
 
+    def get_review_detail(self, review_id: int):
+        with self.Session() as session:
+            stmt = (
+                select(Review)
+                .options(
+                    joinedload(Review.movie),
+                    joinedload(Review.user),
+                )
+                .where(Review.id == review_id)
+            )
+            return session.execute(stmt).scalar_one_or_none()
+
     def get_reviews_for_movie(self, movie_id: int) -> List[Review]:
         with self.Session() as session:
             stmt = (
