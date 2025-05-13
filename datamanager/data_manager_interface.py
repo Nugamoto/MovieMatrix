@@ -10,6 +10,11 @@ class DataManagerInterface(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def get_user_by_username(self, username: str):
+        """Return a user object matching the given username, or None."""
+        raise NotImplementedError
+
+    @abstractmethod
     def get_all_users(self) -> list:
         """Return all user objects."""
         raise NotImplementedError
@@ -74,6 +79,11 @@ class DataManagerInterface(ABC):
     @abstractmethod
     def add_review(self, user_id: int, movie_id: int, review_data: dict):
         """Create a review and return it, or None on failure."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_review_detail(self, review_id: int):
+        """Return a single review by ID, including linked user and movie."""
         raise NotImplementedError
 
     @abstractmethod
