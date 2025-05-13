@@ -5,7 +5,7 @@ class DataManagerInterface(ABC):
     # === USER ===
 
     @abstractmethod
-    def get_user(self, user_id: int):
+    def get_user_by_id(self, user_id: int):
         """Return a user object by a given ID."""
         raise NotImplementedError
 
@@ -44,6 +44,11 @@ class DataManagerInterface(ABC):
 
     # === MOVIE ===
     @abstractmethod
+    def get_movie_by_id(self, movie_id: int):
+        """Return a movie object by ID, or None if not found."""
+        raise NotImplementedError
+
+    @abstractmethod
     def get_all_movies(self) -> list:
         """Return all movie objects, regardless of user."""
         raise NotImplementedError
@@ -77,8 +82,8 @@ class DataManagerInterface(ABC):
 
     # === REVIEW ===
     @abstractmethod
-    def add_review(self, user_id: int, movie_id: int, review_data: dict):
-        """Create a review and return it, or None on failure."""
+    def get_review_by_id(self, review_id: int):
+        """Return a review object by ID, or None if not found."""
         raise NotImplementedError
 
     @abstractmethod
@@ -94,6 +99,11 @@ class DataManagerInterface(ABC):
     @abstractmethod
     def get_reviews_by_user(self, user_id: int) -> list:
         """Return all reviews written by a user."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def add_review(self, user_id: int, movie_id: int, review_data: dict):
+        """Create a review and return it, or None on failure."""
         raise NotImplementedError
 
     @abstractmethod
