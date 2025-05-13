@@ -66,11 +66,13 @@ class SQLiteDataManager(DataManagerInterface):
             return session.get(User, user_id)
 
     def get_user_by_username(self, username: str):
+        """Return a user object matching the given username, or None."""
         with self.Session() as session:
             stmt = select(User).where(User.username == username)
             return session.execute(stmt).scalar_one_or_none()
 
     def get_all_users(self) -> List[User]:
+        """Return all user records from the database."""
         with self.Session() as session:
             return session.execute(select(User)).scalars().all()
 
@@ -83,6 +85,7 @@ class SQLiteDataManager(DataManagerInterface):
             last_name: Optional[str] = None,
             age: Optional[int] = None,
     ) -> Optional[User]:
+        """Create a user with the provided data and return the object or None on failure."""
         if password_hash is None:
             password_hash = generate_password_hash("changeme")
 
@@ -107,6 +110,7 @@ class SQLiteDataManager(DataManagerInterface):
                 return None
 
     def update_user(self, user_id: int, updated_data: Dict[str, Any]) -> Optional[User]:
+        """Update fields of a user and return the updated object or None if not found."""
         with self.Session() as session:
             user = session.get(User, user_id)
             if not user:
@@ -121,6 +125,7 @@ class SQLiteDataManager(DataManagerInterface):
             return user
 
     def delete_user(self, user_id: int) -> bool:
+        """Delete a user by ID; return True if successful, False if not found."""
         with self.Session() as session:
             user = session.get(User, user_id)
             if not user:
@@ -140,10 +145,12 @@ class SQLiteDataManager(DataManagerInterface):
             return session.get(Movie, movie_id)
 
     def get_all_movies(self) -> List[Movie]:
+        """Return all movie records from the database."""
         with self.Session() as session:
             return session.execute(select(Movie)).scalars().all()
 
     def get_movies_by_user(self, user_id: int) -> List[Movie]:
+        """Return all movies linked to a given user."""
         with self.Session() as session:
             stmt = (
                 select(Movie)
@@ -160,6 +167,7 @@ class SQLiteDataManager(DataManagerInterface):
             watched: bool = False,
             favorite: bool = False,
     ) -> Optional[Movie]:
+        """Add or link a movie to a user and return the Movie object."""
         with self.Session() as session:
             user = session.get(User, user_id)
             if not user:
@@ -214,6 +222,7 @@ class SQLiteDataManager(DataManagerInterface):
     def update_movie(
             self, movie_id: int, updated_data: Dict[str, Any]
     ) -> Optional[Movie]:
+        """Update fields of a movie and return the updated object or None."""
         with self.Session() as session:
             movie = session.get(Movie, movie_id)
             if not movie:
@@ -228,6 +237,7 @@ class SQLiteDataManager(DataManagerInterface):
             return movie
 
     def delete_movie(self, movie_id: int) -> bool:
+        """Delete a movie by ID; return True if successful, False if not found."""
         with self.Session() as session:
             movie = session.get(Movie, movie_id)
             if not movie:
@@ -247,6 +257,7 @@ class SQLiteDataManager(DataManagerInterface):
             return session.get(Review, review_id)
 
     def get_review_detail(self, review_id: int):
+        """Return a review with related user and movie data by ID."""
         with self.Session() as session:
             stmt = (
                 select(Review)
@@ -259,6 +270,7 @@ class SQLiteDataManager(DataManagerInterface):
             return session.execute(stmt).scalar_one_or_none()
 
     def get_reviews_for_movie(self, movie_id: int) -> List[Review]:
+        """Return all reviews for a specific movie."""
         with self.Session() as session:
             stmt = (
                 select(Review)
@@ -268,6 +280,7 @@ class SQLiteDataManager(DataManagerInterface):
             return session.execute(stmt).scalars().all()
 
     def get_reviews_by_user(self, user_id: int) -> List[Review]:
+        """Return all reviews written by a specific user."""
         with self.Session() as session:
             stmt = (
                 select(Review)
@@ -279,6 +292,7 @@ class SQLiteDataManager(DataManagerInterface):
     def add_review(
             self, user_id: int, movie_id: int, review_data: Dict[str, Any]
     ) -> Optional[Review]:
+        """Create and return a new review, or None if user or movie not found."""
         with self.Session() as session:
             if not (session.get(User, user_id) and session.get(Movie, movie_id)):
                 logger.warning(
@@ -302,6 +316,7 @@ class SQLiteDataManager(DataManagerInterface):
     def update_review(
             self, review_id: int, updated_data: Dict[str, Any]
     ) -> Optional[Review]:
+        """Update fields of a review and return the updated object or None."""
         with self.Session() as session:
             review = session.get(Review, review_id)
             if not review:
@@ -316,6 +331,7 @@ class SQLiteDataManager(DataManagerInterface):
             return review
 
     def delete_review(self, review_id: int) -> bool:
+        """Delete a review by ID; return True if successful, False if not found."""
         with self.Session() as session:
             review = session.get(Review, review_id)
             if not review:
