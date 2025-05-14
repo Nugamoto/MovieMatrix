@@ -3,12 +3,73 @@
 {% block title %}Welcome - MovieMatrix{% endblock %}
 
 {% block content %}
-<h1 class="display-4">Welcome to MovieMatrix 🎬</h1>
-<p class="lead">
-    This web app allows users to manage their favorite movies — add, update, delete, and review them.
-</p>
-<hr class="my-4">
-<p>
-    Use the navigation bar to get started. This is the central hub for everything movie-related.
-</p>
+<!-- Hero Section -->
+<div class="p-5 mb-4 bg-dark text-white rounded-3">
+    <div class="container py-5">
+        <h1 class="display-4 fw-bold">Welcome to MovieMatrix 🎬</h1>
+        <p class="lead">Your personal space to manage and review your favorite movies.</p>
+        <a class="btn btn-primary btn-lg mt-3" href="{{ url_for('all_movies') }}">Browse Movies</a>
+    </div>
+</div>
+
+<!-- Feature Cards -->
+<div class="row text-center mb-5">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">🎞️ Movie Management</h5>
+                <p class="card-text">Add, edit, and delete movies with ease. Keep your list up-to-date.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">⭐ Review System</h5>
+                <p class="card-text">Rate and review your favorite films. Share your opinion with others.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">👥 User Profiles</h5>
+                <p class="card-text">Manage users and their movie activities through a clean interface.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Placeholder -->
+<div class="row text-center mb-5">
+    <div class="col-md-4">
+        <h2>{{ movie_count }}</h2>
+        <p>Movies</p>
+    </div>
+    <div class="col-md-4">
+        <h2>{{ user_count }}</h2>
+        <p>Registered Users</p>
+    </div>
+    <div class="col-md-4">
+        <h2>{{ review_count }}</h2>
+        <p>Reviews</p>
+    </div>
+</div>
+
+<!-- About Section -->
+<div class="card mb-5">
+    <div class="card-body">
+        <h4 class="card-title">About This App</h4>
+        <p class="card-text">
+            MovieMatrix is a learning project built with Flask and Bootstrap. It helps users track and review movies,
+            manage users, and explore movie data. This app is ideal for demonstrating web development skills.
+        </p>
+        <p class="card-text">
+            <small class="text-muted">Built by a passionate Python learner 🤓</small>
+        </p>
+    </div>
+</div>
 {% endblock %}
+
+
+
