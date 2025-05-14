@@ -242,7 +242,7 @@ def test_add_duplicate_movie_links_only_once(data_manager, session):
     # Add again with is_watched=True, should update the link
     data_manager.add_movie(user.id, movie_data, watched=True)
 
-    with session() as s:
+    with session as s:
         link = s.query(UserMovie).filter_by(user_id=user.id).first()
         assert link is not None
         assert link.is_planned is True
