@@ -115,3 +115,19 @@ class DataManagerInterface(ABC):
     def delete_review(self, review_id: int) -> bool:
         """Delete a review and return success status."""
         raise NotImplementedError
+
+    # === STATS ===
+    @abstractmethod
+    def count_users(self) -> int:
+        """Return the total number of users."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def count_movies(self) -> int:
+        """Return the total number of movies."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def count_reviews(self) -> int:
+        """Return the total number of reviews."""
+        raise NotImplementedError

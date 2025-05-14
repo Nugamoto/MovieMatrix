@@ -105,8 +105,16 @@ def load_user(user_id: str):
 
 @app.route("/")
 def home():
-    """Render static landing page."""
-    return render_template("home.html")
+    """Render landing page with basic statistics."""
+    movie_count = data_manager.count_movies()
+    user_count = data_manager.count_users()
+    review_count = data_manager.count_reviews()
+    return render_template(
+        "home.html",
+        movie_count=movie_count,
+        user_count=user_count,
+        review_count=review_count,
+    )
 
 
 # ------------------------------ LOGIN --------------------------------- #

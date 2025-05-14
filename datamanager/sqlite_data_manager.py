@@ -340,3 +340,22 @@ class SQLiteDataManager(DataManagerInterface):
             session.delete(review)
             session.commit()
             return True
+
+    # --------------------------------------------------------------------- #
+    #                                stats                                  #
+    # --------------------------------------------------------------------- #
+
+    def count_users(self) -> int:
+        """Return total number of users."""
+        with self.Session() as session:
+            return session.query(User).count()
+
+    def count_movies(self) -> int:
+        """Return total number of movies."""
+        with self.Session() as session:
+            return session.query(Movie).count()
+
+    def count_reviews(self) -> int:
+        """Return total number of reviews."""
+        with self.Session() as session:
+            return session.query(Review).count()
