@@ -87,7 +87,7 @@ logger.setLevel(logging.INFO)
 # ------------------------------ Auth ---------------------------------- #
 
 login_manager = LoginManager()
-login_manager.login_view = "login"  # Name der späteren Login-Route
+login_manager.login_view = "login"
 login_manager.login_message_category = "warning"
 login_manager.init_app(app)
 
@@ -117,7 +117,7 @@ def login():
     if request.method == "POST":
         username = request.form.get("username", "").strip()
         password = request.form.get("password", "")
-        user = data_manager.get_user_by_username(username)  # Helper (s. unten)
+        user = data_manager.get_user_by_username(username)
 
         if user and check_password_hash(user.password_hash, password):
             login_user(user)
@@ -209,6 +209,68 @@ def add_user():
     return render_template("add_user.html")
 
 
+@app.route("/update_user/<int:user_id>", methods=["GET", "POST"])
+@login_required
+def update_user(user_id: int):
+    """Edit a user’s account details (username, email, name, age)."""
+    user = data_manager.get_user_by_id(user_id)
+    if not user:
+        flash("User not found.", "danger")
+        return redirect(url_for("list_users"))
+
+    if current_user.id != user_id:
+        abort(403)
+
+    if request.method == "POST":
+        # --- Extract & validate ------------------------------------------------
+        username = request.form.get("username", "").strip()
+        email = request.form.get("email", "").strip()
+        first_name = request.form.get("first_name", "").strip()
+        last_name = request.form.get("last_name", "").strip() or None
+        age_raw = request.form.get("age", "").strip()
+
+        if not is_valid_username(username):
+            flash("Invalid username (3–30 chars, letters, digits, _).", "danger")
+            return redirect(request.url)
+
+        if not is_valid_email(email):
+            flash("Invalid e-mail address.", "danger")
+            return redirect(request.url)
+
+        if not is_valid_name(first_name):
+            flash("First name may only contain letters, spaces, - and '.", "danger")
+            return redirect(request.url)
+
+        if last_name and not is_valid_name(last_name):
+            flash("Last name may only contain letters, spaces, - and '.", "danger")
+            return redirect(request.url)
+
+        # --- Persist -----------------------------------------------------------
+        age = int(age_raw) if age_raw.isdigit() else None
+        updated_fields = {
+            "username": username,
+            "email": email,
+            "first_name": first_name,
+            "last_name": last_name,
+            "age": age,
+        }
+
+        try:
+            updated_user = data_manager.update_user(user_id, updated_fields)
+            if updated_user:
+                flash("User updated.", "success")
+            else:
+                flash("Update failed. User may no longer exist.", "danger")
+            return redirect(url_for("list_users"))
+        except SQLAlchemyError as exc:
+            logger.error("DB error while updating user ID %d: %s", user_id, exc)
+            flash("Database error while updating user.", "danger")
+            return redirect(request.url)
+
+    # GET
+    return render_template("edit_user.html", user=user)
+
+
 @app.route("/delete_user/<int:user_id>", methods=["POST"])
 @login_required
 def delete_user(user_id: int):
@@ -224,6 +286,49 @@ def delete_user(user_id: int):
     data_manager.delete_user(user_id)
     flash(f"User “{user.username}” deleted.", "success")
     return redirect(url_for("list_users"))
+
+
+@app.route("/users/<int:user_id>/change_password", methods=["GET", "POST"])
+@login_required
+def change_password(user_id: int):
+    """Allow a user to change their password after verifying the current one."""
+    user = data_manager.get_user_by_id(user_id)
+    if not user:
+        flash("User not found.", "danger")
+        return redirect(url_for("list_users"))
+
+    if current_user.id != user_id:
+        abort(403)
+
+    if request.method == "POST":
+        current_pw = request.form.get("current_password", "")
+        new_pw = request.form.get("new_password", "")
+        confirm_pw = request.form.get("confirm_password", "")
+
+        if not check_password_hash(user.password_hash, current_pw):
+            flash("Current password is incorrect.", "danger")
+            return redirect(request.url)
+
+        if not passwords_match(new_pw, confirm_pw):
+            flash("New passwords do not match.", "danger")
+            return redirect(request.url)
+
+        if current_pw == new_pw:
+            flash("New password must be different from current password.", "warning")
+            return redirect(request.url)
+
+        try:
+            data_manager.update_user(user_id, {
+                "password_hash": generate_password_hash(new_pw)
+            })
+            flash("Password updated successfully.", "success")
+            return redirect(url_for("list_users"))
+        except SQLAlchemyError as exc:
+            logger.error("DB error while changing password for user ID %d: %s", user_id, exc)
+            flash("Database error while updating password.", "danger")
+            return redirect(request.url)
+
+    return render_template("change_password.html", user=user)
 
 
 @app.route("/users/<int:user_id>")

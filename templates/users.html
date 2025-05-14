@@ -33,6 +33,12 @@
             <a href="{{ url_for('user_reviews', user_id=user.id) }}"
                class="btn btn-sm btn-outline-success">Reviews</a>
 
+            <a href="{{ url_for('update_user', user_id=user.id) }}"
+               class="btn btn-sm btn-outline-secondary">Edit</a>
+
+            <a href="{{ url_for('change_password', user_id=user.id) }}"
+               class="btn btn-sm btn-outline-dark">Change Password</a>
+
             <form method="POST" class="delete-user-form d-inline"
                   action="{{ url_for('delete_user', user_id=user.id) }}">
                 <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>

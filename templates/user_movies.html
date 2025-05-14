@@ -41,6 +41,12 @@
         <td>{{ movie.imdb_rating if movie.imdb_rating is not none else '—' }}</td>
         <td>
             <div class="d-flex gap-2 flex-wrap">
+
+                <a href="{{ url_for('movie_reviews',
+                    movie_id=movie.id,
+                    next=request.path) }}"
+                   class="btn btn-sm btn-outline-success">Reviews</a>
+
                 <a href="{{ url_for('update_movie', user_id=user.id, movie_id=movie.id) }}"
                    class="btn btn-sm btn-outline-secondary">Edit</a>
 
@@ -48,11 +54,7 @@
                       action="{{ url_for('delete_movie', user_id=user.id, movie_id=movie.id) }}">
                     <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                 </form>
-
-                <a href="{{ url_for('movie_reviews',
-                    movie_id=movie.id,
-                    next=request.path) }}"
-                   class="btn btn-sm btn-outline-success">Reviews</a></div>
+            </div>
         </td>
     </tr>
     {% endfor %}
