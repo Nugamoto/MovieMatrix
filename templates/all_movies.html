@@ -10,15 +10,22 @@
     <div class="col">
         <div class="card h-100 shadow-sm">
             {% if movie.poster_url and movie.poster_url != 'N/A' %}
-            <img src="{{ movie.poster_url }}" class="card-img-top movie-poster" alt="Poster of {{ movie.title }}">
+            <a href="{{ url_for('movie_reviews', movie_id=movie.id) }}">
+                <img src="{{ movie.poster_url }}" class="card-img-top movie-poster" alt="Poster of {{ movie.title }}">
+            </a>
             {% else %}
-            <div class="movie-poster d-flex align-items-center justify-content-center bg-light text-muted">
-                —
-            </div>
+            <a href="{{ url_for('movie_reviews', movie_id=movie.id) }}" class="text-decoration-none">
+                <div class="movie-poster d-flex align-items-center justify-content-center bg-light text-muted">
+                    —
+                </div>
+            </a>
             {% endif %}
             <div class="card-body p-2">
                 <h6 class="card-title mb-1">
-                    {{ movie.title }}
+                    <a href="{{ url_for('movie_reviews', movie_id=movie.id) }}"
+                       class="text-decoration-none text-dark">
+                        {{ movie.title }}
+                    </a>
                     <small>({{ movie.year }})</small>
                 </h6>
                 <p class="card-text small mb-0">{{ movie.genre or '—' }}</p>
