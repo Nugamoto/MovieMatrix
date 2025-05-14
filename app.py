@@ -502,7 +502,7 @@ def movie_reviews(movie_id: int):
         return redirect(url_for("list_users"))
 
     reviews = data_manager.get_reviews_for_movie(movie_id)
-    next_url = request.args.get("next") or url_for("list_users")
+    next_url = request.args.get("next") or request.referrer or url_for("all_movies")
     return render_template(
         "movie_reviews.html",
         movie=movie,
