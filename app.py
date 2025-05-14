@@ -191,7 +191,10 @@ def add_user():
             return redirect(request.url)
 
         # --- Persist -----------------------------------------------------------
-        age = int(age_raw) if age_raw.isdigit() else None
+        try:
+            age = int(age_raw)
+        except ValueError:
+            age = None
         pw_hash = generate_password_hash(password)
 
         try:
@@ -223,6 +226,7 @@ def update_user(user_id: int):
     """Edit a user’s account details (username, email, name, age)."""
     user = data_manager.get_user_by_id(user_id)
     if not user:
+        logger.warning("User ID %d not found on route %s", user_id, request.path)
         flash("User not found.", "danger")
         return redirect(url_for("list_users"))
 
@@ -254,7 +258,10 @@ def update_user(user_id: int):
             return redirect(request.url)
 
         # --- Persist -----------------------------------------------------------
-        age = int(age_raw) if age_raw.isdigit() else None
+        try:
+            age = int(age_raw)
+        except ValueError:
+            age = None
         updated_fields = {
             "username": username,
             "email": email,
@@ -288,10 +295,12 @@ def delete_user(user_id: int):
 
     user = data_manager.get_user_by_id(user_id)
     if not user:
+        logger.warning("User ID %d not found on route %s", user_id, request.path)
         flash("User not found.", "danger")
         return redirect(url_for("list_users"))
 
     data_manager.delete_user(user_id)
+    logger.info("User ID %d (%s) deleted by user ID %d", user.id, user.username, current_user.id)
     flash(f"User “{user.username}” deleted.", "success")
     return redirect(url_for("list_users"))
 
@@ -302,6 +311,7 @@ def change_password(user_id: int):
     """Allow a user to change their password after verifying the current one."""
     user = data_manager.get_user_by_id(user_id)
     if not user:
+        logger.warning("User ID %d not found on route %s", user_id, request.path)
         flash("User not found.", "danger")
         return redirect(url_for("list_users"))
 
@@ -349,6 +359,7 @@ def user_movies(user_id: int):
 
     user = data_manager.get_user_by_id(user_id)
     if not user:
+        logger.warning("User ID %d not found on route %s", user_id, request.path)
         flash("User not found.", "danger")
         return redirect(url_for("list_users"))
 
@@ -370,6 +381,7 @@ def add_movie(user_id: int):
     """Add a movie to user's list via OMDb lookup."""
     user = data_manager.get_user_by_id(user_id)
     if not user:
+        logger.warning("User ID %d not found on route %s", user_id, request.path)
         flash("User not found.", "danger")
         return redirect(url_for("list_users"))
 
@@ -382,6 +394,10 @@ def add_movie(user_id: int):
 
         if not title:
             flash("Movie title is required.", "danger")
+            return redirect(request.url)
+
+        if year and not is_valid_year(year):
+            flash("Invalid year format.", "danger")
             return redirect(request.url)
 
         movie_data = fetch_movie(title, year)
@@ -467,6 +483,7 @@ def user_reviews(user_id: int):
 
     user = data_manager.get_user_by_id(user_id)
     if not user:
+        logger.warning("User ID %d not found on route %s", user_id, request.path)
         flash(f"User with ID {user_id} not found.")
         logger.warning("User ID %d not found when accessing reviews (path: %s)", user_id, request.path)
         return redirect(url_for("list_users"))
@@ -480,6 +497,7 @@ def user_reviews(user_id: int):
 def review_detail(user_id: int, review_id: int):
     review = data_manager.get_review_detail(review_id)
     if not review or review.user_id != user_id:
+        logger.warning("Review ID %d not found or does not belong to user ID %d", review_id, user_id)
         flash("Review not found.", "warning")
         return redirect(url_for("user_reviews", user_id=user_id))
 
@@ -499,7 +517,7 @@ def movie_reviews(movie_id: int):
     movie = data_manager.get_movie_by_id(movie_id)
     if not movie:
         flash(f"Movie with ID {movie_id} not found.")
-        logger.warning("Movie ID %d not found when accessing reviews (referrer: %s)", movie_id, request.referrer)
+        logger.warning("Movie ID %d not found when accessing reviews (path: %s)", movie_id, request.path)
         return redirect(url_for("list_users"))
 
     reviews = data_manager.get_reviews_for_movie(movie_id)
@@ -522,6 +540,7 @@ def add_review(user_id: int, movie_id: int):
     user = data_manager.get_user_by_id(user_id)
     movie = data_manager.get_movie_by_id(movie_id)
     if not user or not movie:
+        logger.warning("User ID %d not found on route %s", user_id, request.path)
         flash("User or movie not found.", "danger")
         return redirect(url_for("list_users"))
 
@@ -558,6 +577,7 @@ def edit_review(user_id: int, review_id: int):
     user = data_manager.get_user_by_id(user_id)
     review = data_manager.get_review_by_id(review_id)
     if not user or not review:
+        logger.warning("User ID %d not found on route %s", user_id, request.path)
         flash("User or review not found.", "danger")
         return redirect(url_for("list_users"))
 
@@ -639,7 +659,7 @@ def handle_sqlalchemy_error(e):
 @app.errorhandler(Exception)
 def handle_unexpected_error(e):
     """Catch-all for unexpected exceptions."""
-    logger.exception("Unhandled exception:")
+    logger.exception("Unhandled exception at %s", request.path)
     return render_template("500.html"), 500
 
 
