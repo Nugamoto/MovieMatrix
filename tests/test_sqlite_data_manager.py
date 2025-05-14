@@ -348,3 +348,34 @@ def test_delete_nonexistent_review(data_manager):
     """
     result = data_manager.delete_review(9999)
     assert result is False
+
+
+# -------------------- Statistics Tests -------------------- #
+
+def test_count_users(data_manager):
+    """
+    Should return the correct number of users.
+    """
+    create_user(data_manager, "user1")
+    create_user(data_manager, "user2")
+    assert data_manager.count_users() >= 2
+
+
+def test_count_movies(data_manager):
+    """
+    Should return the correct number of movies.
+    """
+    user = create_user(data_manager, "movietester")
+    create_movie(data_manager, user.id, "Movie A")
+    create_movie(data_manager, user.id, "Movie B")
+    assert data_manager.count_movies() >= 2
+
+
+def test_count_reviews(data_manager):
+    """
+    Should return the correct number of reviews.
+    """
+    user = create_user(data_manager, "reviewer")
+    movie = create_movie(data_manager, user.id, "Reviewed Movie")
+    create_review(data_manager, user.id, movie.id)
+    assert data_manager.count_reviews() >= 1
