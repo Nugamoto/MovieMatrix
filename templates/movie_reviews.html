@@ -7,10 +7,11 @@
 
     <div class="d-flex gap-2">
         {% if current_user.is_authenticated %}
-        <a href="{{ url_for('add_review', user_id=current_user.id, movie_id=movie.id, next=request.full_path) }}"
+        <a href="{{ url_for('reviews.add_review', user_id=current_user.id, movie_id=movie.id, next=request.full_path) }}"
            class="btn btn-success">Add Review</a>
-        <a href="{{ url_for('user_movies', user_id=current_user.id) }}" class="btn btn-outline-primary">Your Movies</a>
-        <a href="{{ url_for('user_reviews', user_id=current_user.id) }}" class="btn btn-outline-success">Your
+        <a href="{{ url_for('users.user_movies', user_id=current_user.id) }}" class="btn btn-outline-primary">Your
+            Movies</a>
+        <a href="{{ url_for('reviews.user_reviews', user_id=current_user.id) }}" class="btn btn-outline-success">Your
             Reviews</a>
         {% endif %}
     </div>
@@ -41,14 +42,14 @@
         <td>{{ review.user_rating }}</td>
         <td>
             <div class="d-flex gap-2 flex-wrap">
-                <a href="{{ url_for('review_detail', user_id=review.user.id, review_id=review.id) }}"
+                <a href="{{ url_for('reviews.review_detail', user_id=review.user.id, review_id=review.id) }}"
                    class="btn btn-sm btn-outline-success">Full Review</a>
 
                 {% if current_user.is_authenticated and current_user.id == review.user.id %}
-                <a href="{{ url_for('edit_review', user_id=current_user.id, review_id=review.id, next=request.full_path) }}"
+                <a href="{{ url_for('reviews.edit_review', user_id=current_user.id, review_id=review.id, next=request.full_path) }}"
                    class="btn btn-sm btn-outline-secondary">Edit</a>
                 <form method="POST" class="delete-review-form d-inline"
-                      action="{{ url_for('delete_review', user_id=current_user.id, review_id=review.id) }}">
+                      action="{{ url_for('reviews.delete_review', user_id=current_user.id, review_id=review.id) }}">
                     <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                 </form>
                 {% endif %}

@@ -37,7 +37,7 @@
 
     <div class="mt-4 d-flex gap-2">
         <button type="submit" class="btn btn-success">Update Review</button>
-        <a href="{{ request.args.get('next') or url_for('user_reviews', user_id=user.id) }}"
+        <a href="{{ request.args.get('next') or url_for('reviews.user_reviews', user_id=user.id) }}"
            class="btn btn-outline-secondary">Cancel</a>
     </div>
 </form>
