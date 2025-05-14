@@ -209,7 +209,7 @@ def add_user():
                 flash("Username or e-mail already exists.", "danger")
             return redirect(url_for("list_users"))
         except SQLAlchemyError as exc:
-            logger.error("DB error while adding user '%s': %s", username, exc)
+            logger.error("DB error while adding user '%s' (email=%s): %s", username, email, exc)
             flash("Database error while adding user.", "danger")
             return redirect(request.url)
 
@@ -271,7 +271,7 @@ def update_user(user_id: int):
                 flash("Update failed. User may no longer exist.", "danger")
             return redirect(url_for("list_users"))
         except SQLAlchemyError as exc:
-            logger.error("DB error while updating user ID %d: %s", user_id, exc)
+            logger.error("DB error while updating user ID %d (username=%s): %s", user_id, username, exc)
             flash("Database error while updating user.", "danger")
             return redirect(request.url)
 
@@ -332,7 +332,8 @@ def change_password(user_id: int):
             flash("Password updated successfully.", "success")
             return redirect(url_for("list_users"))
         except SQLAlchemyError as exc:
-            logger.error("DB error while changing password for user ID %d: %s", user_id, exc)
+            logger.error("DB error while changing password for user ID %d (username=%s): %s", user_id, user.username,
+                         exc)
             flash("Database error while updating password.", "danger")
             return redirect(request.url)
 
@@ -467,7 +468,7 @@ def user_reviews(user_id: int):
     user = data_manager.get_user_by_id(user_id)
     if not user:
         flash(f"User with ID {user_id} not found.")
-        logger.warning("User ID %d not found when accessing reviews", user_id)
+        logger.warning("User ID %d not found when accessing reviews (path: %s)", user_id, request.path)
         return redirect(url_for("list_users"))
 
     reviews = data_manager.get_reviews_by_user(user_id)
@@ -498,7 +499,7 @@ def movie_reviews(movie_id: int):
     movie = data_manager.get_movie_by_id(movie_id)
     if not movie:
         flash(f"Movie with ID {movie_id} not found.")
-        logger.warning("Movie ID %d not found when accessing reviews", movie_id)
+        logger.warning("Movie ID %d not found when accessing reviews (referrer: %s)", movie_id, request.referrer)
         return redirect(url_for("list_users"))
 
     reviews = data_manager.get_reviews_for_movie(movie_id)
@@ -614,7 +615,8 @@ def page_not_found(e):
 @app.errorhandler(403)
 def forbidden(e):
     """Handle 403 Forbidden errors with a redirect and flash message."""
-    logger.warning("403 error: Forbidden access to %s", request.path)
+    logger.warning("403 error: Forbidden access to %s (user_id=%s)", request.path,
+                   getattr(current_user, "id", "anonymous"))
     flash("You are not allowed to access this resource.", "warning")
     return redirect(url_for("list_users"))
 
@@ -622,7 +624,7 @@ def forbidden(e):
 @app.errorhandler(500)
 def internal_server_error(e):
     """Render custom 500 page."""
-    logger.error("500 error occurred: %s", str(e))
+    logger.exception("500 error occurred: %s", str(e))
     return render_template("500.html"), 500
 
 
