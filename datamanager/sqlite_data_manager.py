@@ -114,7 +114,8 @@ class SQLiteDataManager(DataManagerInterface):
         with self.Session() as session:
             user = session.get(User, user_id)
             if not user:
-                logger.warning("Update failed: User ID %d not found.", user_id)
+                logger.warning("Update failed: User ID %d not found. Data attempted: %s",
+                               user_id, updated_data)
                 return None
 
             for key, value in updated_data.items():
@@ -133,6 +134,7 @@ class SQLiteDataManager(DataManagerInterface):
                 return False
             session.delete(user)
             session.commit()
+            logger.info("User ID %d successfully deleted.", user_id)
             return True
 
     # --------------------------------------------------------------------- #
@@ -171,7 +173,8 @@ class SQLiteDataManager(DataManagerInterface):
         with self.Session() as session:
             user = session.get(User, user_id)
             if not user:
-                logger.warning("Add movie failed: User ID %d not found.", user_id)
+                logger.warning("Add movie failed: User ID %d not found. Movie: %s",
+                               user_id, movie_data.get("title"))
                 return None
 
             movie = (
@@ -226,7 +229,8 @@ class SQLiteDataManager(DataManagerInterface):
         with self.Session() as session:
             movie = session.get(Movie, movie_id)
             if not movie:
-                logger.warning("Update failed: Movie ID %d not found.", movie_id)
+                logger.warning("Update failed: Movie ID %d not found. Data attempted: %s",
+                               movie_id, updated_data)
                 return None
 
             for key, val in updated_data.items():
@@ -245,6 +249,7 @@ class SQLiteDataManager(DataManagerInterface):
                 return False
             session.delete(movie)
             session.commit()
+            logger.info("Movie ID %d successfully deleted.", movie_id)
             return True
 
     # --------------------------------------------------------------------- #
@@ -320,7 +325,8 @@ class SQLiteDataManager(DataManagerInterface):
         with self.Session() as session:
             review = session.get(Review, review_id)
             if not review:
-                logger.warning("Update failed: Review ID %d not found.", review_id)
+                logger.warning("Update failed: Review ID %d not found. Data attempted: %s",
+                               review_id, updated_data)
                 return None
 
             for key, val in updated_data.items():
@@ -339,6 +345,7 @@ class SQLiteDataManager(DataManagerInterface):
                 return False
             session.delete(review)
             session.commit()
+            logger.info("Review ID %d successfully deleted.", review_id)
             return True
 
     # --------------------------------------------------------------------- #
