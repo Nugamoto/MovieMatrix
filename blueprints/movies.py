@@ -11,7 +11,7 @@ from flask import (
 from flask_login import login_required, current_user
 
 from clients.omdb_client import fetch_movie
-from helpers import is_valid_year, is_valid_rating, normalize_rating
+from utils.helpers import is_valid_year, is_valid_rating, normalize_rating
 
 movies_bp = Blueprint("movies", __name__, url_prefix="/movies")
 

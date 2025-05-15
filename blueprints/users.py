@@ -12,7 +12,7 @@ from flask_login import login_required, current_user
 from sqlalchemy.exc import SQLAlchemyError
 from werkzeug.security import generate_password_hash, check_password_hash
 
-from helpers import (
+from utils.helpers import (
     is_valid_email,
     is_valid_username,
     is_valid_name,

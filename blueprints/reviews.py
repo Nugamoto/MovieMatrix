@@ -10,7 +10,7 @@ from flask import (
 )
 from flask_login import login_required, current_user
 
-from helpers import is_valid_rating, normalize_rating
+from utils.helpers import is_valid_rating, normalize_rating
 
 reviews_bp = Blueprint("reviews", __name__, url_prefix="/reviews")
 

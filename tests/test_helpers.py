@@ -1,6 +1,6 @@
 import pytest
 
-from helpers import (
+from utils.helpers import (
     is_valid_username,
     is_valid_email,
     is_valid_name,
