@@ -1,3 +1,10 @@
+"""
+Pytest configuration and fixtures for MovieMatrix application tests.
+
+This module sets up the testing environment, application factory,
+client and data manager fixtures, and helper utilities for user
+registration and cleanup.
+"""
 import os
 import sys
 import uuid
@@ -9,7 +16,7 @@ import pytest
 os.environ["FLASK_ENV"] = "testing"
 os.environ.setdefault("OMDB_API_KEY", "test_dummy_key")
 
-# Ensure project root is available in sys.path for all imports
+# Ensure project root is in sys.path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from app import create_app
@@ -21,16 +28,21 @@ TEST_DB_URI = f"sqlite:///{TEST_DB_PATH}"
 
 
 # --------------------------- Fixtures --------------------------- #
+
 @pytest.fixture(scope="session")
 def app():
     """
-    Create and configure a new app instance for the test session.
+    Create and configure a new Flask app instance for tests.
+
+    Applies TestingConfig, enables TESTING mode, and initializes the database.
+    Returns:
+        Flask app: The configured application.
     """
     app = create_app("TestingConfig")
     app.config["TESTING"] = True
     app.config["SQLALCHEMY_DATABASE_URI"] = TEST_DB_URI
 
-    # Create all database tables using the app's engine
+    # Create tables
     engine = app.data_manager.engine
     Base.metadata.create_all(bind=engine)
 
@@ -40,7 +52,10 @@ def app():
 @pytest.fixture
 def client(app):
     """
-    Return a test client for the Flask app.
+    Provide a Flask test client for sending HTTP requests.
+
+    Yields:
+        FlaskClient: A test client for the app.
     """
     with app.test_client() as client:
         yield client
@@ -49,21 +64,27 @@ def client(app):
 @pytest.fixture
 def data_manager(app):
     """
-    Provide access to the data manager from the current app instance.
+    Provide the SQLiteDataManager instance from the Flask app.
+
+    Args:
+        app: The Flask application instance.
+    Returns:
+        SQLiteDataManager: The data manager for DB operations.
     """
     return app.data_manager
 
 
 # ---------------------- Helper Fixture ---------------------- #
+
 @pytest.fixture
 def register_user_and_login(client):
     """
-    Register a new user via the HTTP form and log them in.
+    Helper fixture to register a new user via form and log them in.
 
+    Returns:
+        function: Caller function accepting prefix, first_name, last_name, age.
     Usage:
         user = register_user_and_login(prefix="movie")
-    Returns:
-        A dict with keys 'id', 'username', 'email', 'password'.
     """
 
     def _create(prefix="user", first_name="Test", last_name="User", age=30):
@@ -71,7 +92,7 @@ def register_user_and_login(client):
         username = f"{prefix}_{unique}"
         email = f"{username}@example.com"
         password = "secret123"
-        # Register user
+        # Register
         form = {
             "username": username,
             "email": email,
@@ -87,7 +108,7 @@ def register_user_and_login(client):
             follow_redirects=True
         )
         assert response.status_code in (200, 302)
-        # Now login
+        # Login
         response = client.post(
             "/login",
             data={"username": username, "password": password},
@@ -102,7 +123,7 @@ def register_user_and_login(client):
 @pytest.fixture(scope="session", autouse=True)
 def cleanup_test_db():
     """
-    Automatically remove the test database file after all tests.
+    Remove the temporary test database file after tests complete.
     """
     yield
     try:
