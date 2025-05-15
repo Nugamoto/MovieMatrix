@@ -1,4 +1,3 @@
-# blueprints/users.py
 from flask import (
     Blueprint,
     render_template,

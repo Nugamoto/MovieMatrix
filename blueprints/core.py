@@ -1,4 +1,3 @@
-# blueprints/core.py
 from flask import (
     Blueprint,
     render_template,
