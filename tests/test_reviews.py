@@ -1,227 +1,137 @@
-import uuid
 from unittest.mock import patch
 
+import pytest
 from bs4 import BeautifulSoup
-from werkzeug.security import generate_password_hash
 
 
-# ---------------------- Helpers -------------------------- #
+# ---------------------- REVIEW TESTS ---------------------- #
+# Groups tests by functionality: Listing, Add, Edit, Delete, and Error cases
 
-def create_user_and_login(client, data_manager):
-    """Create a test user and log them in."""
-    unique = uuid.uuid4().hex[:6]
-    username = f"user_{unique}"
-    email = f"{username}@test.com"
-    password = "secret123"
-    user = data_manager.add_user(username, email, "Review", password_hash=generate_password_hash(password))
-    client.post("/login", data={"username": username, "password": password}, follow_redirects=True)
-    return user
-
-
-def add_movie(client, user, mock_fetch):
-    """Add a movie using a mocked OMDb response and return its ID from the DB directly."""
-    mock_fetch.return_value = {
-        "title": "Arrival",
-        "year": "2016",
-        "director": "Denis Villeneuve",
-        "genre": "Sci-Fi",
-        "poster_url": "",
-        "imdb_rating": "8.0",
-    }
-
-    client.post(
-        f"/movies/add/{user.id}",
-        data={"title": "Arrival", "year": "2016"},
-        follow_redirects=True
-    )
-
-    # Direct DB access: get movie by user
-    movies = client.application.data_manager.get_movies_by_user(user.id)
-    assert movies, "No movies found for user"
-    return movies[0].id
+@pytest.fixture
+def create_review_user_and_movie(client, data_manager, register_user_and_login):
+    """
+    Create user, add a movie via mocked OMDb, and return user_id and movie_id.
+    """
+    user = register_user_and_login(prefix="review")
+    uid = data_manager.get_user_by_username(user['username']).id
+    with patch("blueprints.movies.fetch_movie") as mock_fetch:
+        mock_fetch.return_value = {"title": "Arrival", "year": "2016", "director": "Denis Villeneuve",
+                                   "genre": "Sci-Fi", "poster_url": "", "imdb_rating": "8.0"}
+        client.post(f"/movies/add/{uid}", data={"title": "Arrival", "year": "2016"}, follow_redirects=True)
+    movie = data_manager.get_movies_by_user(uid)[0]
+    return uid, movie.id
 
 
-# ---------------------- Review Tests -------------------------- #
+@pytest.mark.usefixtures("client", "data_manager")
+class TestReviewListing:
+    @patch("blueprints.movies.fetch_movie")
+    def test_user_reviews_page(self, mock_fetch, client, data_manager, create_review_user_and_movie):
+        uid, mid = create_review_user_and_movie
+        client.post(f"/reviews/user/{uid}/movie/{mid}/add",
+                    data={"title": "Stunning", "text": "Loved it!", "user_rating": "8.5"}, follow_redirects=True)
+        response = client.get(f"/reviews/user/{uid}")
+        assert response.status_code == 200
+        assert b"stunning" in response.data.lower()
 
-@patch("blueprints.movies.fetch_movie")
-def test_user_reviews_page(mock_fetch, client, data_manager):
-    user = create_user_and_login(client, data_manager)
-    movie_id = add_movie(client, user, mock_fetch)
-
-    client.post(f"/reviews/user/{user.id}/movie/{movie_id}/add", data={
-        "title": "Stunning",
-        "text": "Loved it!",
-        "user_rating": "8.5"
-    }, follow_redirects=True)
-
-    response = client.get(f"/reviews/user/{user.id}")
-    assert response.status_code == 200
-    assert b"Stunning" in response.data
-
-
-@patch("blueprints.movies.fetch_movie")
-def test_movie_reviews_page(mock_fetch, client, data_manager):
-    user = create_user_and_login(client, data_manager)
-    movie_id = add_movie(client, user, mock_fetch)
-
-    client.post(f"/reviews/user/{user.id}/movie/{movie_id}/add", data={
-        "title": "Twisty",
-        "text": "Great plot!",
-        "user_rating": "9.0"
-    }, follow_redirects=True)
-
-    response = client.get(f"/reviews/movie/{movie_id}")
-    assert response.status_code == 200
-    assert b"Twisty" in response.data
+    @patch("blueprints.movies.fetch_movie")
+    def test_movie_reviews_page(self, mock_fetch, client, data_manager, create_review_user_and_movie):
+        uid, mid = create_review_user_and_movie
+        client.post(f"/reviews/user/{uid}/movie/{mid}/add",
+                    data={"title": "Twisty", "text": "Great plot!", "user_rating": "9.0"}, follow_redirects=True)
+        response = client.get(f"/reviews/movie/{mid}")
+        assert response.status_code == 200
+        assert b"twisty" in response.data.lower()
 
 
-@patch("blueprints.movies.fetch_movie")
-def test_review_detail_page(mock_fetch, client, data_manager):
-    user = create_user_and_login(client, data_manager)
-    movie_id = add_movie(client, user, mock_fetch)
-
-    client.post(f"/reviews/user/{user.id}/movie/{movie_id}/add", data={
-        "title": "Funny",
-        "text": "Great humor",
-        "user_rating": "8.5"
-    }, follow_redirects=True)
-
-    page = client.get(f"/reviews/user/{user.id}")
-    soup = BeautifulSoup(page.data, "html.parser")
-    review_row = next((r for r in soup.find_all("tr") if "Funny" in r.text), None)
-    review_id = review_row.find("form")["action"].split("/")[-1]
-
-    detail = client.get(f"/reviews/user/{user.id}/review/{review_id}")
-    assert detail.status_code == 200
-    assert b"Great humor" in detail.data
+@pytest.mark.usefixtures("client", "data_manager")
+class TestReviewDetail:
+    @patch("blueprints.movies.fetch_movie")
+    def test_review_detail_page(self, mock_fetch, client, data_manager, create_review_user_and_movie):
+        uid, mid = create_review_user_and_movie
+        client.post(f"/reviews/user/{uid}/movie/{mid}/add",
+                    data={"title": "Funny", "text": "Great humor", "user_rating": "8.5"}, follow_redirects=True)
+        page = client.get(f"/reviews/user/{uid}")
+        soup = BeautifulSoup(page.data, "html.parser")
+        row = next(r for r in soup.find_all("tr") if "funny" in r.text.lower())
+        rid = row.find("form")["action"].split("/")[-1]
+        detail = client.get(f"/reviews/user/{uid}/review/{rid}")
+        assert detail.status_code == 200
+        assert b"great humor" in detail.data.lower()
 
 
-@patch("blueprints.movies.fetch_movie")
-def test_add_review_valid(mock_fetch, client, data_manager):
-    """Should add a valid review and show success."""
-    user = create_user_and_login(client, data_manager)
-    movie_id = add_movie(client, user, mock_fetch)
+@pytest.mark.usefixtures("client", "data_manager")
+class TestReviewAdd:
+    @patch("blueprints.movies.fetch_movie")
+    def test_add_review_valid(self, mock_fetch, client, data_manager, create_review_user_and_movie):
+        uid, mid = create_review_user_and_movie
+        response = client.post(f"/reviews/user/{uid}/movie/{mid}/add",
+                               data={"title": "Masterpiece", "text": "Beautiful visuals", "user_rating": "9.0"},
+                               follow_redirects=True)
+        assert response.status_code == 200
+        assert b"review added" in response.data.lower()
+        assert b"masterpiece" in response.data.lower()
 
-    response = client.post(
-        f"/reviews/user/{user.id}/movie/{movie_id}/add",
-        data={
-            "title": "Masterpiece",
-            "text": "A beautiful story with great visuals.",
-            "user_rating": "9.0"
-        },
-        follow_redirects=True
-    )
-
-    assert response.status_code == 200
-    assert b"Review added" in response.data
-    assert b"Masterpiece" in response.data
-
-
-@patch("blueprints.movies.fetch_movie")
-def test_add_review_invalid(mock_fetch, client, data_manager):
-    user = create_user_and_login(client, data_manager)
-    movie_id = add_movie(client, user, mock_fetch)
-
-    response = client.post(f"/reviews/user/{user.id}/movie/{movie_id}/add", data={
-        "title": "",
-        "text": "",
-        "user_rating": "eleven"
-    }, follow_redirects=True)
-
-    assert response.status_code == 200
-    assert b"required" in response.data or b"invalid" in response.data
+    @patch("blueprints.movies.fetch_movie")
+    def test_add_review_invalid(self, mock_fetch, client, data_manager, create_review_user_and_movie):
+        uid, mid = create_review_user_and_movie
+        response = client.post(f"/reviews/user/{uid}/movie/{mid}/add",
+                               data={"title": "", "text": "", "user_rating": "eleven"}, follow_redirects=True)
+        assert response.status_code == 200
+        assert b"required" in response.data.lower() or b"invalid" in response.data.lower()
 
 
-@patch("blueprints.movies.fetch_movie")
-def test_edit_review_valid(mock_fetch, client, data_manager):
-    user = create_user_and_login(client, data_manager)
-    movie_id = add_movie(client, user, mock_fetch)
+@pytest.mark.usefixtures("client", "data_manager")
+class TestReviewEdit:
+    @pytest.fixture(autouse=True)
+    def setup_review(self, client, data_manager, create_review_user_and_movie):
+        uid, mid = create_review_user_and_movie
+        self.uid, self.mid = uid, mid
+        client.post(f"/reviews/user/{uid}/movie/{mid}/add",
+                    data={"title": "Solid", "text": "Cool", "user_rating": "7.5"}, follow_redirects=True)
+        page = client.get(f"/reviews/user/{uid}")
+        soup = BeautifulSoup(page.data, "html.parser")
+        row = next(r for r in soup.find_all("tr") if "solid" in r.text.lower())
+        self.rid = row.find("form")["action"].split("/")[-1]
 
-    client.post(f"/reviews/user/{user.id}/movie/{movie_id}/add", data={
-        "title": "Solid",
-        "text": "Cool time-travel",
-        "user_rating": "7.5"
-    }, follow_redirects=True)
+    @patch("blueprints.movies.fetch_movie")
+    def test_edit_review_valid(self, mock_fetch, client):
+        response = client.post(f"/reviews/user/{self.uid}/edit/{self.rid}",
+                               data={"title": "Improved", "text": "Updated", "user_rating": "8.0"},
+                               follow_redirects=True)
+        assert response.status_code == 200
+        assert b"improved" in response.data.lower()
 
-    page = client.get(f"/reviews/user/{user.id}")
-    soup = BeautifulSoup(page.data, "html.parser")
-    review_row = next((r for r in soup.find_all("tr") if "Solid" in r.text), None)
-    review_id = review_row.find("form")["action"].split("/")[-1]
-
-    response = client.post(f"/reviews/user/{user.id}/edit/{review_id}", data={
-        "title": "Improved",
-        "text": "Updated thoughts",
-        "user_rating": "8.0"
-    }, follow_redirects=True)
-
-    assert response.status_code == 200
-    assert b"Improved" in response.data
-
-
-@patch("blueprints.movies.fetch_movie")
-def test_edit_review_invalid(mock_fetch, client, data_manager):
-    """Should reject review update with invalid data."""
-    user = create_user_and_login(client, data_manager)
-    movie_id = add_movie(client, user, mock_fetch)
-
-    # First: create valid review
-    client.post(f"/reviews/user/{user.id}/movie/{movie_id}/add", data={
-        "title": "Initial",
-        "text": "Thoughts...",
-        "user_rating": "7.0"
-    }, follow_redirects=True)
-
-    # Then: extract review ID from review list
-    page = client.get(f"/reviews/user/{user.id}")
-    soup = BeautifulSoup(page.data, "html.parser")
-    review_row = next((r for r in soup.find_all("tr") if "Initial" in r.text), None)
-    review_id = review_row.find("form")["action"].split("/")[-1]
-
-    # Submit invalid update (empty title & text, bad rating)
-    response = client.post(
-        f"/reviews/user/{user.id}/edit/{review_id}",
-        data={
-            "title": "",
-            "text": "",
-            "user_rating": "12.0"
-        },
-        follow_redirects=True
-    )
-
-    assert response.status_code == 200
-    assert b"required" in response.data or b"Rating must be" in response.data
+    @patch("blueprints.movies.fetch_movie")
+    def test_edit_review_invalid(self, mock_fetch, client):
+        response = client.post(f"/reviews/user/{self.uid}/edit/{self.rid}",
+                               data={"title": "", "text": "", "user_rating": "12.0"}, follow_redirects=True)
+        assert response.status_code == 200
+        assert b"required" in response.data.lower() or b"rating must be" in response.data.lower()
 
 
-@patch("blueprints.movies.fetch_movie")
-def test_delete_review_valid(mock_fetch, client, data_manager):
-    user = create_user_and_login(client, data_manager)
-    movie_id = add_movie(client, user, mock_fetch)
+@pytest.mark.usefixtures("client", "data_manager")
+class TestReviewDelete:
+    @pytest.fixture(autouse=True)
+    def setup_review(self, client, data_manager, create_review_user_and_movie):
+        uid, mid = create_review_user_and_movie
+        self.uid, self.mid = uid, mid
+        client.post(f"/reviews/user/{uid}/movie/{mid}/add",
+                    data={"title": "Emotional", "text": "Loved", "user_rating": "9.0"}, follow_redirects=True)
+        page = client.get(f"/reviews/user/{uid}")
+        soup = BeautifulSoup(page.data, "html.parser")
+        row = next(r for r in soup.find_all("tr") if "emotional" in r.text.lower())
+        self.rid = row.find("form")["action"].split("/")[-1]
 
-    client.post(f"/reviews/user/{user.id}/movie/{movie_id}/add", data={
-        "title": "Emotional",
-        "text": "Loved the tone",
-        "user_rating": "9.0"
-    }, follow_redirects=True)
+    def test_delete_review_valid(self, client):
+        response = client.post(f"/reviews/user/{self.uid}/delete/{self.rid}", follow_redirects=True)
+        assert response.status_code == 200
+        # Ensure it's removed
+        page = client.get(f"/reviews/user/{self.uid}")
+        assert b"emotional" not in page.data.lower()
 
-    page = client.get(f"/reviews/user/{user.id}")
-    soup = BeautifulSoup(page.data, "html.parser")
-    review_row = next((r for r in soup.find_all("tr") if "Emotional" in r.text), None)
-    review_id = review_row.find("form")["action"].split("/")[-1]
-
-    response = client.post(f"/reviews/user/{user.id}/delete/{review_id}", follow_redirects=True)
-    assert response.status_code == 200
-    assert b"Emotional" not in response.data
-
-
-@patch("blueprints.movies.fetch_movie")
-def test_delete_review_invalid(mock_fetch, client, data_manager):
-    """Should handle deletion of nonexistent review gracefully."""
-    user = create_user_and_login(client, data_manager)
-
-    response = client.post(
-        f"/reviews/user/{user.id}/delete/999999",
-        follow_redirects=True
-    )
-
-    assert response.status_code == 200
-    assert b"Review not found" in response.data or b"not found" in response.data.lower()
+    def test_delete_review_invalid(self, client, data_manager, register_user_and_login):
+        user = register_user_and_login(prefix="reviewerr")
+        uid = data_manager.get_user_by_username(user['username']).id
+        response = client.post(f"/reviews/user/{uid}/delete/999999", follow_redirects=True)
+        assert response.status_code == 200
+        assert b"review not found" in response.data.lower()
