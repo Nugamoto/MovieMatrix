@@ -1,3 +1,8 @@
+"""
+Pytest tests for user-related Flask routes including listing, adding, modifying,
+password change, and deletion of users, covering valid flows, invalid inputs,
+and access control.
+"""
 import uuid
 
 import pytest
@@ -8,8 +13,17 @@ from werkzeug.security import generate_password_hash
 
 @pytest.mark.usefixtures("client")
 class TestUserListAndAdd:
+    """
+    Test listing users and adding new users via form submissions.
+    """
+
     def valid_user_form(self):
-        """Generate a valid user registration form."""
+        """
+        Generate a valid user registration form payload with unique values.
+
+        Returns:
+            dict: Form data for a valid user.
+        """
         unique = uuid.uuid4().hex[:6]
         username = f"User_{unique}"
         return {
@@ -22,15 +36,19 @@ class TestUserListAndAdd:
             "confirm_password": "password123",
         }
 
-        def test_list_users(self, client):
-
-            response = client.get("/users", follow_redirects=True)
+    def test_list_users(self, client):
+        """
+        Should return 200 and display the users list page with Add User link.
+        """
+        response = client.get("/users", follow_redirects=True)
         assert response.status_code == 200
-        response.status_code == 200
         assert b"Users" in response.data
         assert b"Add User" in response.data
 
     def test_add_user_valid(self, client):
+        """
+        Should create a new user when form input is valid.
+        """
         form = self.valid_user_form()
         response = client.post("/users/add", data=form, follow_redirects=True)
         assert response.status_code == 200
@@ -48,6 +66,14 @@ class TestUserListAndAdd:
         ],
     )
     def test_add_user_invalid_input(self, client, field, value, error_message):
+        """
+        Should display error messages when form input is invalid.
+
+        Args:
+            field (str): Form field to invalidate.
+            value: Invalid value for the field.
+            error_message (bytes): Expected error substring in response.
+        """
         form = self.valid_user_form()
         form[field] = value
         response = client.post("/users/add", data=form, follow_redirects=True)
@@ -57,12 +83,20 @@ class TestUserListAndAdd:
 
 @pytest.mark.usefixtures("client", "data_manager", "register_user_and_login")
 class TestUserModification:
+    """
+    Test updating and deleting users, including unauthorized access handling.
+    """
+
     def test_update_user_valid(self, register_user_and_login, client):
+        """
+        Should update user details when input is valid.
+        """
         user = register_user_and_login(prefix="updateuser")
         response = client.post(
-            f"/users/edit/{user['username']}".replace(user['username'],
-                                                      str(client.application.data_manager.get_user_by_username(
-                                                          user['username']).id)),
+            f"/users/edit/{user['username']}".replace(
+                user['username'],
+                str(client.application.data_manager.get_user_by_username(user['username']).id)
+            ),
             data={
                 "username": user['username'],
                 "email": "updated@example.com",
@@ -85,6 +119,9 @@ class TestUserModification:
         ],
     )
     def test_update_user_invalid_input(self, register_user_and_login, client, data_manager, field, value, error_msg):
+        """
+        Should show error when updating user with invalid data.
+        """
         user = register_user_and_login(prefix="validuser")
         user_obj = data_manager.get_user_by_username(user['username'])
         form = {
@@ -100,6 +137,9 @@ class TestUserModification:
         assert error_msg in response.data
 
     def test_update_user_unauthorized(self, register_user_and_login, client, data_manager):
+        """
+        Should forbid editing another user's profile.
+        """
         owner = register_user_and_login(prefix="owner")
         victim = data_manager.add_user(
             "victim", "v@example.com", "Victim",
@@ -120,6 +160,9 @@ class TestUserModification:
         assert b"Access forbidden" in response.data
 
     def test_delete_user_valid(self, register_user_and_login, client, data_manager):
+        """
+        Should delete own user account successfully.
+        """
         user = register_user_and_login(prefix="deleteuser")
         user_obj = data_manager.get_user_by_username(user['username'])
         response = client.post(f"/users/delete/{user_obj.id}", follow_redirects=True)
@@ -127,6 +170,9 @@ class TestUserModification:
         assert b"deleted" in response.data
 
     def test_delete_user_invalid(self, register_user_and_login, client, data_manager):
+        """
+        Should forbid deleting another user's account.
+        """
         owner = register_user_and_login(prefix="owner")
         target = data_manager.add_user(
             "target", "target@example.com", "Target",
@@ -139,7 +185,14 @@ class TestUserModification:
 
 @pytest.mark.usefixtures("client", "register_user_and_login")
 class TestPasswordChange:
+    """
+    Test password change functionality, covering valid and invalid cases and access control.
+    """
+
     def test_change_password_valid(self, register_user_and_login, client):
+        """
+        Should update password when current password matches and new passwords align.
+        """
         user = register_user_and_login(prefix="changepw")
         user_obj = client.application.data_manager.get_user_by_username(user['username'])
         response = client.post(
@@ -163,6 +216,9 @@ class TestPasswordChange:
         ],
     )
     def test_change_password_invalid(self, register_user_and_login, client, current_pw, new_pw, confirm_pw, error_msg):
+        """
+        Should display appropriate error messages when password change inputs are invalid.
+        """
         user = register_user_and_login(prefix="pwtest")
         user_obj = client.application.data_manager.get_user_by_username(user['username'])
         response = client.post(
@@ -178,6 +234,9 @@ class TestPasswordChange:
         assert error_msg in response.data
 
     def test_change_password_unauthorized(self, register_user_and_login, client, data_manager):
+        """
+        Should forbid changing password of another user.
+        """
         user1 = register_user_and_login(prefix="one")
         user2 = data_manager.add_user(
             "two", "two@example.com", "Two", generate_password_hash("pw")
