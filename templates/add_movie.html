@@ -37,7 +37,7 @@
 
     <div class="mt-4 d-flex gap-2">
         <button type="submit" class="btn btn-success">Add Movie</button>
-        <a href="{{ url_for('user_movies', user_id=user.id) }}" class="btn btn-outline-secondary">Cancel</a>
+        <a href="{{ url_for('users.user_movies', user_id=user.id) }}" class="btn btn-outline-secondary">Cancel</a>
     </div>
 </form>
 {% endblock %}

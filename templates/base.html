@@ -11,7 +11,7 @@
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-secondary">
     <div class="container-fluid">
-        <a class="navbar-brand" href="/"> 🎬 MovieMatrix 🎬</a>
+        <a class="navbar-brand" href="{{ url_for('core.home') }}"> 🎬 MovieMatrix 🎬</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
                 data-bs-target="#navbarNav" aria-controls="navbarNav"
                 aria-expanded="false" aria-label="Toggle navigation">
@@ -21,11 +21,11 @@
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item">
                     <a class="nav-link {% if request.path == '/movies' %}active{% endif %}"
-                       href="{{ url_for('all_movies') }}">Movies</a>
+                       href="{{ url_for('movies.list_movies') }}">Movies</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link {% if request.path.startswith('/users') %}active{% endif %}"
-                       href="{{ url_for('list_users') }}">Users</a>
+                       href="{{ url_for('users.list_users') }}">Users</a>
                 </li>
 
                 {% if current_user.is_authenticated %}
@@ -33,14 +33,14 @@
                     <a class="nav-link"
                        href="#"
                        id="nav-profile-link">{{ current_user.username }}</a>
-                    {# später z. B. url_for('profile', user_id=current_user.id) #}
+                    {# future: url_for('users.profile', user_id=current_user.id) #}
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
+                    <a class="nav-link" href="{{ url_for('core.logout') }}">Logout</a>
                 </li>
                 {% else %}
                 <li class="nav-item">
-                    <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+                    <a class="nav-link" href="{{ url_for('core.login') }}">Login</a>
                 </li>
                 {% endif %}
             </ul>
