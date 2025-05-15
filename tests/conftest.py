@@ -1,10 +1,6 @@
 import os
 import sys
 
-import pytest
-
-from datamanager.models import Base
-
 # --------------------------- Environment Setup --------------------------- #
 
 # Set testing environment and default values before anything else
@@ -14,6 +10,8 @@ os.environ.setdefault("OMDB_API_KEY", "test_dummy_key")
 # Ensure project root is available in sys.path for all imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+import pytest
+from datamanager.models import Base
 from app import create_app
 
 # --------------------------- Constants --------------------------- #
