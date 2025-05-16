@@ -93,7 +93,7 @@ This project was created to solidify concepts in:
 
 5. **Initialize the database**
    ```bash
-   python init_db.py
+   python -m utils.init_db
    ```
    This will create all necessary tables. You must run this **before** starting the Flask application.
 
